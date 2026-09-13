@@ -1,1 +1,15 @@
 *.DS_Store
+
+# uv / virtualenv
+.venv/
+__pycache__/
+*.pyc
+
+# datasets and experiment output
+fedbr/data/
+output*/
+*.pkl
+
+# editors
+.idea/
+.vscode/

@@ -1,0 +1,33 @@
+[project]
+name = "fedbr-env"
+version = "0.1.0"
+description = "Runtime environment for the FedBR reference implementation (ICML 2023)"
+readme = "README.md"
+requires-python = ">=3.10"
+# torch and torchvision are deliberately absent: setup.sh installs them with
+# `uv pip install --torch-backend=auto`, which picks the CUDA build matching the
+# host driver. Adding them here would pin one CUDA variant into the lockfile.
+# `uv run` leaves those extra packages alone; a bare `uv sync` would remove
+# them, so re-run ./setup.sh if that happens.
+dependencies = [
+    "numpy>=1.24",
+    "pillow>=9.0",
+    "tqdm>=4.62",
+    "imageio>=2.9",
+    "gdown>=4.0",
+    "matplotlib>=3.5",
+    "parso>=0.8",
+    "parameterized>=0.8",
+]
+
+# `wilds` drags in torch, ogb, pandas and scikit-learn, and is only needed by
+# the WILDSCamelyon / WILDSFMoW datasets, which the FedBR results do not use.
+[project.optional-dependencies]
+wilds = ["wilds>=2.0"]
+
+# The repository ships no `__init__.py` files, so `fedbr` is imported as a
+# namespace package straight from the working directory. Installing this
+# project would put a second `fedbr` on sys.path and shadow it, so keep uv in
+# non-package mode.
+[tool.uv]
+package = false

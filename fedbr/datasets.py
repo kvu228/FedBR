@@ -10,8 +10,6 @@ from torch.utils.data import TensorDataset, Subset
 from torchvision.datasets import MNIST, ImageFolder, CIFAR10, CIFAR100
 from torchvision.transforms.functional import rotate
 import torch.distributions.dirichlet as dirichlet
-from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
-from wilds.datasets.fmow_dataset import FMoWDataset
 import random
 import numpy as np
 
@@ -66,7 +64,10 @@ def reweight(q, empty_class):
 class MultipleDomainDataset:
     N_STEPS = 5001           # Default, subclasses may override
     CHECKPOINT_FREQ = 100    # Default, subclasses may override
-    N_WORKERS = 8            # Default, subclasses may override
+    # One DataLoader with this many workers is built per environment, so on a
+    # box with few cores the default of 8 oversubscribes badly. Override with
+    # the FEDBR_NUM_WORKERS environment variable.
+    N_WORKERS = int(os.environ.get('FEDBR_NUM_WORKERS', 8))
     ENVIRONMENTS = None      # Subclasses should override
     INPUT_SHAPE = None       # Subclasses should override
 
@@ -800,6 +801,9 @@ class WILDSCamelyon(WILDSDataset):
     ENVIRONMENTS = [ "hospital_0", "hospital_1", "hospital_2", "hospital_3",
             "hospital_4"]
     def __init__(self, root, test_envs, hparams):
+        # Imported here so the `wilds` extra is only needed by the WILDS datasets.
+        from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
+
         dataset = Camelyon17Dataset(root_dir=root)
         super().__init__(
             dataset, "hospital", test_envs, hparams['data_augmentation'], hparams)
@@ -809,6 +813,9 @@ class WILDSFMoW(WILDSDataset):
     ENVIRONMENTS = [ "region_0", "region_1", "region_2", "region_3",
             "region_4", "region_5"]
     def __init__(self, root, test_envs, hparams):
+        # Imported here so the `wilds` extra is only needed by the WILDS datasets.
+        from wilds.datasets.fmow_dataset import FMoWDataset
+
         dataset = FMoWDataset(root_dir=root)
         super().__init__(
             dataset, "region", test_envs, hparams['data_augmentation'], hparams)

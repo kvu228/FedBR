@@ -10,6 +10,16 @@ Federated Learning (FL) is a way for machines to learn from data that is kept lo
 
 ## How to run
 
+For a packaged setup (uv, GPU detection, presets, result summaries) see
+[SETUP.md](SETUP.md):
+
+```bash
+./setup.sh
+./run.sh FedBR cifar10
+```
+
+The rest of this section describes the original manual setup.
+
 ### Requirments
 To run the code in this repository, be sure to install the following packages:
 ```
