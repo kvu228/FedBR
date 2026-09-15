@@ -50,10 +50,8 @@ echo "=== 4/4 data + split cache ==="
 if command -v make >/dev/null 2>&1; then
     make data
 else
-    uv run python -c "from torchvision.datasets import CIFAR10, CIFAR100; \
-CIFAR10('./fedbr/data/CIFAR10', train=True, download=True); \
-CIFAR10('./fedbr/data/CIFAR10', train=False, download=True); \
-CIFAR100('./fedbr/data/CIFAR10', train=True, download=True)"
+    # Google Drive mirror by default, official host as the fallback.
+    uv run python -m fedbr.scripts.download_data --data_dir ./fedbr/data/CIFAR10
     echo "Split cache not pre-built (no make); the first run will build it."
 fi
 

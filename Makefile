@@ -116,7 +116,9 @@ help:
 	@echo "Setup"
 	@echo "  setup              create the uv env (CUDA wheels on Linux)"
 	@echo "  setup-vhl          + StyleGAN deps needed by the VHL baseline"
-	@echo "  data               download CIFAR10 and pre-build the split cache"
+	@echo "  data               fetch CIFAR10/100 + pre-build the split cache"
+	@echo "                     (Google Drive mirror, NO_DRIVE=1 for the"
+	@echo "                      official host; falls back automatically)"
 	@echo "  smoke              short end-to-end run to validate the install"
 	@echo "  probe              measure seconds/step + VRAM on the rented GPU"
 	@echo ""
@@ -161,13 +163,21 @@ setup-vhl:
 lock:
 	$(UV) lock
 
+# Datasets come from a Google Drive mirror by default; the official
+# www.cs.toronto.edu host is slow or throttled from many networks. The script
+# verifies whatever it gets with torchvision's checksum and falls back to the
+# official host on any failure. NO_DRIVE=1 skips the mirror.
+NO_DRIVE ?= 0
+ifeq ($(NO_DRIVE),1)
+DRIVE_FLAG := --no_drive
+else
+DRIVE_FLAG :=
+endif
+
 .PHONY: data
 data:
 	@mkdir -p $(DATA_DIR) $(CACHE_DIR)
-	$(PY) -c "from torchvision.datasets import CIFAR10, CIFAR100; \
-	  CIFAR10('$(DATA_DIR)', train=True,  download=True); \
-	  CIFAR10('$(DATA_DIR)', train=False, download=True); \
-	  CIFAR100('$(DATA_DIR)', train=True, download=True)"
+	$(PY) -m fedbr.scripts.download_data --data_dir $(DATA_DIR) $(DRIVE_FLAG)
 	@echo ">>> Pre-building the non-iid split cache (a few minutes, once per seed)"
 	@$(MAKE) run-fedavg ROUNDS=1 EVAL_EVERY=1 EVAL_SUBSAMPLE=64 OUT=$(CACHE_DIR)/_warmup
 	@echo ">>> Cache ready in $(CACHE_DIR)"

@@ -30,6 +30,14 @@ thing.
 says `cpu only`, the driver or the container is wrong — stop here, training on
 CPU is unusably slow.
 
+The datasets come from a **Google Drive mirror by default**, because the
+official `www.cs.toronto.edu` host is slow or throttled from many networks.
+What the mirror returns is verified against torchvision's checksum; anything
+that fails is discarded and re-fetched from the official host, so the mirror is
+a speed-up and never a dependency. `make data NO_DRIVE=1` skips it; the mirror
+URLs are `--drive_cifar10` / `--drive_cifar100` on
+`python -m fedbr.scripts.download_data`.
+
 ### Step 2 — verify the install  (~2 min)
 
 ```bash
