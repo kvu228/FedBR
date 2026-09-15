@@ -17,7 +17,7 @@ git clone <this repo> && cd FedBR
 bash setup_vastai.sh          # installs uv + make, syncs deps, downloads CIFAR10
 make smoke                    # ~2 min end-to-end check - do not skip this
 tmux new -s fedbr             # table1 runs for ~2 days; do not lose it to SSH
-make table1                   # the main CIFAR10 result (see §5 for cost)
+make table1                   # the main CIFAR10 result (see §6 for cost)
 ```
 
 `make table1` ends by running `make summarize` and `make figures` itself, so
@@ -160,7 +160,55 @@ Also worth knowing, for anyone comparing numbers closely:
 
 ---
 
-## 5. Cost
+## 5. Choosing an instance
+
+**Do not pick on VRAM or on tensor-core FLOPS — neither is the constraint.**
+
+*Measured on this code:* FedAvg/ERM is 9.2 M parameters (exactly the figure in
+the paper's Table 7, which is a useful confirmation that the VGG11 backbone is
+the right one). The FedBR module holds 20.6 M, because it keeps frozen copies
+of the featurizer and classifier as submodules. With ten client models, their
+`FedAvg` wrapper's deepcopy, and an accumulated gradient state-dict each, peak
+allocation lands in the low single-digit GB. Every run logs its own
+`torch.cuda.max_memory_allocated` to `results.jsonl`, and `make summarize`
+prints it as the `VRAM (GB)` column, so do not take this estimate on trust —
+check it after `make probe`.
+
+The batch is 32 images at 32×32, which is a *small* kernel, and
+`Algorithm_Fed.update()` deep-copies the whole model and walks its full
+state-dict **once per client per step** — 500 000 times over a 1000-round run.
+That makes the workload largely bound by memory traffic, kernel-launch latency
+and plain Python, not by arithmetic throughput. So a card with 4× the FLOPS
+will not give 4× the speed, and CPU single-thread performance matters more than
+usual.
+
+What to actually check when renting:
+
+| | |
+| --- | --- |
+| GPU count | 2 is worth it (§6), more is not — nine runs, and the tail is one long FedBR run |
+| VRAM | a 12 GB card is generous; verify with the `VRAM (GB)` column rather than guessing |
+| vCPU | **≥ 4 per concurrent run** (so ≥ 8 on a 2-GPU box). This is the spec most likely to bottleneck you |
+| RAM | each process holds the whole ~1.8 GB dataset, with a transient spike while loading it; ≥ 16 GB for two runs, 32 GB comfortable |
+| Disk | ~5 GB for `table1` (data + one 1.8 GB cache + checkpoints); ~30 GB if you also run `table8-errorbar`. vast.ai's default allocation is often smaller than you expect |
+
+**So: yes, 2× RTX 3060 is a sensible choice**, and the 12 GB variant has far
+more VRAM than this needs. A faster card shortens calendar time and therefore
+your exposure to a preempted instance, but on an overhead-bound workload like
+this one it is unlikely to pay for itself per unit of work. Rather than trust
+that reasoning, measure it:
+
+```bash
+make data          # once
+make probe         # ~10 min: 3 rounds of FedAvg and of FedBR, 10 clients
+```
+
+`probe` prints `h/1000rd` — the projected hours for one full run **on the card
+you just rented** — and the peak VRAM. Multiply out against the instance's
+hourly price before starting `table1`. If the projection is unacceptable, stop
+the instance having spent minutes rather than a day.
+
+## 6. Cost
 
 Table 7 of the paper reports mean computation time **per step** on CIFAR10 with
 VGG11: 0.29 s for FedAvg, 0.60 s for FedBR (each step updates all 10 clients).
@@ -202,7 +250,9 @@ Options if that is too much:
 
 The non-iid split plus per-image rotation takes several minutes and is rebuilt
 by every run. `--cache_dir` (on by default, `./cache`) builds it once per
-`(dataset, clients, seed)` and reuses it; each cache entry is ~700 MB.
+`(dataset, clients, seed)` and reuses it. Each entry holds all 20 environments
+as fp32 tensors — 150 000 images × 3×32×32×4 B ≈ **1.8 GB** — so budget disk
+accordingly (`table8-errorbar` uses three seeds, hence three entries).
 When the cache is used, the RNG is re-seeded after loading so that a cached run
 and a freshly built run share the same random stream.
 
@@ -212,7 +262,7 @@ rotation logic, or you will keep training on the old partition.
 
 ---
 
-## 6. Source changes made for this reproduction
+## 7. Source changes made for this reproduction
 
 All are listed here so they can be reviewed or reverted. Defaults preserve the
 released behaviour except where noted.
@@ -317,7 +367,7 @@ released behaviour except where noted.
 
 ---
 
-## 7. Output layout
+## 8. Output layout
 
 ```
 output/cifar10/<run>/

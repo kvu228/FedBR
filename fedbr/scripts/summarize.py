@@ -94,6 +94,16 @@ def summarize_run(run_dir, split, top_k, thresholds):
     accs = sorted((a for _, a in curve), reverse=True)
     top = accs[:top_k]
 
+    # train_fed.py logs the mean seconds/step over each checkpoint interval.
+    # Projected to 1000 rounds this is the number to compare GPUs on, and to
+    # decide whether a full run is affordable on the card you just rented.
+    step_times = [r['step_time'] for r in records if 'step_time' in r]
+    hours_per_1000r = None
+    if step_times:
+        mean_step = sum(step_times) / len(step_times)
+        hours_per_1000r = mean_step * local_steps * 1000 / 3600.0
+    peak_mem = max([r.get('mem_gb', 0.0) for r in records] or [0.0])
+
     rounds_to = OrderedDict()
     for t in thresholds:
         hit = next((rnd for rnd, a in curve if a >= t), None)
@@ -108,6 +118,8 @@ def summarize_run(run_dir, split, top_k, thresholds):
         'rounds_done': curve[-1][0],
         'rounds_to': rounds_to,
         'curve': curve,
+        'hours_per_1000r': hours_per_1000r,
+        'peak_mem': peak_mem,
         'done': os.path.exists(os.path.join(run_dir, 'done')),
         'algorithm': records[0].get('args', {}).get('algorithm', '?'),
         'seed': records[0].get('args', {}).get('seed', '?'),
@@ -170,7 +182,7 @@ def main():
 
     header = ['Run', 'Algorithm', 'Acc (%)', 'Best (%)', 'Rounds run']
     header += ['Rounds for {:g}%'.format(t) for t in args.threshold]
-    header += ['Finished']
+    header += ['h/1000rd', 'VRAM (GB)', 'Finished']
 
     table = []
     for r in rows:
@@ -179,6 +191,9 @@ def main():
         for t in args.threshold:
             base_rounds = base['rounds_to'][t] if base else None
             row.append(fmt_rounds(r['rounds_to'][t], base_rounds))
+        row.append('-' if r['hours_per_1000r'] is None
+                   else '{:.1f}'.format(r['hours_per_1000r']))
+        row.append('{:.1f}'.format(r['peak_mem']))
         row.append('yes' if r['done'] else 'NO (partial)')
         table.append(row)
 
@@ -192,6 +207,13 @@ def main():
 
     print('\nAcc (%) = mean of the top-{} rounds, {} split of the held-out '
           'client environments.'.format(args.top_k, args.split))
+    total = sum(r['hours_per_1000r'] for r in rows
+                if r['hours_per_1000r'] is not None)
+    if total:
+        print('h/1000rd = projected hours for a full 1000-round run on this '
+              'GPU, from the logged seconds/step.')
+        print('These {} runs project to {:.0f} GPU-hours total, {:.0f} h per '
+              'card if split over two GPUs.'.format(len(rows), total, total / 2))
     if base is None and args.baseline:
         print('No run named "{}" found, so no speed-up column.'.format(
             args.baseline))

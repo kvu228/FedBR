@@ -118,6 +118,7 @@ help:
 	@echo "  setup-vhl          + StyleGAN deps needed by the VHL baseline"
 	@echo "  data               download CIFAR10 and pre-build the split cache"
 	@echo "  smoke              short end-to-end run to validate the install"
+	@echo "  probe              measure seconds/step + VRAM on the rented GPU"
 	@echo ""
 	@echo "Paper tables (CIFAR10 only)"
 	@echo "  table1             Table 1 / Figure 5(a): 10 clients, 1000 rounds"
@@ -170,6 +171,19 @@ data:
 	@echo ">>> Pre-building the non-iid split cache (a few minutes, once per seed)"
 	@$(MAKE) run-fedavg ROUNDS=1 EVAL_EVERY=1 EVAL_SUBSAMPLE=64 OUT=$(CACHE_DIR)/_warmup
 	@echo ">>> Cache ready in $(CACHE_DIR)"
+
+# Measure the card you actually rented before committing to a 1000-round run.
+# Uses the real 10-client configuration, so the reported seconds/step is the
+# one that matters; `make smoke` uses 4 clients and would under-report.
+.PHONY: probe
+probe:
+	@$(MAKE) run-fedavg ROUNDS=3 EVAL_EVERY=1 EVAL_SUBSAMPLE=512 OUT=$(OUT)/_probe FORCE=1
+	@$(MAKE) run-fedbr  ROUNDS=3 EVAL_EVERY=1 EVAL_SUBSAMPLE=512 OUT=$(OUT)/_probe FORCE=1
+	@echo ""
+	@$(PY) -m fedbr.scripts.summarize $(OUT)/_probe --threshold 15 --baseline ''
+	@echo ""
+	@echo ">>> 'h/1000rd' is the projected cost of one full run on this GPU."
+	@echo ">>> Table 1 is ~2x the fedavg figure plus ~2x the fedbr figure, x9 runs."
 
 .PHONY: smoke
 smoke:
