@@ -127,12 +127,21 @@ def summarize_run(run_dir, split, top_k, thresholds):
 
 
 def find_runs(roots):
+    """Run directories under `roots`, skipping scratch ones.
+
+    `make smoke` / `make probe` / `make data` write throwaway runs to `_smoke`,
+    `_probe` and `_warmup` inside the output tree. A directory named with a
+    leading underscore is scratch and never belongs in a results table --
+    unless it was named explicitly on the command line.
+    """
     runs = []
     for root in roots:
         if os.path.exists(os.path.join(root, 'results.jsonl')):
             runs.append(root)
             continue
-        for dirpath, _dirnames, filenames in os.walk(root):
+        for dirpath, dirnames, filenames in os.walk(root):
+            # prune scratch subtrees, but never the root the user asked for
+            dirnames[:] = [d for d in dirnames if not d.startswith('_')]
             if 'results.jsonl' in filenames:
                 runs.append(dirpath)
     return sorted(set(runs))

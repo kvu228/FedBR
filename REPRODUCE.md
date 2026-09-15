@@ -7,38 +7,116 @@ prevents you from running them.
 
 ---
 
-## 1. Quick start on a vast.ai instance
+## 1. Runbook — the commands, in order
 
-Pick an image with CUDA 12.4+ drivers (`pytorch/pytorch` or `nvidia/cuda` both
-work — nothing from the image is used except the driver). Then:
+Rent an instance with CUDA 12.4+ drivers (`pytorch/pytorch` or `nvidia/cuda`
+both work — nothing from the image is used except the driver). See §5 for how
+to size it; the short version is that 2× RTX 3060 is fine and vCPU/RAM matter
+more than the GPU tier.
+
+### Step 1 — set up  (~10 min, once)
 
 ```bash
 git clone <this repo> && cd FedBR
-bash setup_vastai.sh          # installs uv + make, syncs deps, downloads CIFAR10
-make smoke                    # ~2 min end-to-end check - do not skip this
-tmux new -s fedbr             # table1 runs for ~2 days; do not lose it to SSH
-make table1                   # the main CIFAR10 result (see §6 for cost)
+bash setup_vastai.sh
 ```
 
-`make table1` ends by running `make summarize` and `make figures` itself, so
-there is no separate reporting step — but both can also be run at any time
-against a partially finished set of runs.
+That installs `uv` and `make` if missing, runs `uv sync`, prints the GPU torch
+can see, downloads CIFAR10/CIFAR100 and pre-builds the non-iid split cache.
+If `uv` and `make` are already there, `make setup && make data` is the same
+thing.
 
-**Runs resume.** Each experiment writes a `done` marker when it finishes, and
-the Makefile skips experiments that already have one. If `make table1` dies at
-the seventh of nine algorithms, re-running it picks up there instead of
-retraining the first six (which would also append duplicate rows to their
-append-only `results.jsonl`). A run that died *part-way* has no marker, so it is
-deleted and restarted cleanly. Use `FORCE=1`, or delete the run directory, to
-redo a finished experiment.
+**Check the line it prints:** `cuda available: True` and your GPU name. If it
+says `cpu only`, the driver or the container is wrong — stop here, training on
+CPU is unusably slow.
 
-`setup_vastai.sh` is a thin wrapper over `make setup && make data`; if `uv` is
-already on the instance you can skip it and run those two targets directly.
+### Step 2 — verify the install  (~2 min)
+
+```bash
+make smoke
+```
+
+Runs FedBR end-to-end for 4 rounds and prints a summary table. Do not skip it:
+if anything is broken you find out in two minutes rather than six hours.
+
+### Step 3 — measure what a full run costs *on this card*  (~10 min)
+
+```bash
+make probe
+```
+
+Prints `h/1000rd` (projected hours for one complete 1000-round run on the card
+you just rented) and `VRAM (GB)`. **This is the decision point** — multiply
+against the instance's hourly rate before committing. If it is too expensive,
+destroy the instance now, having spent minutes.
+
+### Step 4 — run the experiments
+
+Always inside `tmux`; these run for many hours and an SSH drop would kill them.
+
+**One GPU:**
+
+```bash
+tmux new -s fedbr
+make table1
+```
+
+**Two GPUs** — one run occupies exactly one GPU (there is no DDP), so use two
+shells, one per card. The dataset cache was already built in Step 1, so they
+will not fight over it:
+
+```bash
+tmux new -s g0    # then inside:  make table1-gpu0     (FedBR-family runs)
+tmux new -s g1    # then inside:  make table1-gpu1     (the rest)
+```
+
+Detach with `Ctrl-b d`, re-attach with `tmux attach -t g0`.
+Do **not** use `make -j2 table1`: every job would inherit `DEVICE=0` and pile
+onto one card.
+
+### Step 5 — collect the results
+
+`make table1` runs these itself when it finishes, so this step is only needed
+if you ran individual targets, split across two GPUs, or want to look at
+partial progress while training:
+
+```bash
+make summarize     # table + output/cifar10/summary.csv
+make figures       # figures/cifar10_convergence.png
+```
+
+Both work on runs that are still in progress — `results.jsonl` is written every
+`EVAL_EVERY` rounds, and unfinished runs are flagged `NO (partial)`.
+
+### Step 6 — if something dies
+
+Just re-run the same target. Each experiment writes a `done` marker and
+finished ones are skipped, so `make table1` resumes at the run that failed
+instead of retraining the earlier ones (which would also append duplicate rows
+to their append-only `results.jsonl`). A run that died *part-way* has no
+marker, so it is deleted and restarted cleanly. `FORCE=1` redoes a finished
+experiment.
+
+### Other tables
+
+Same pattern, after Step 1:
+
+```bash
+make table5-100clients      # Table 5
+make table8-errorbar        # Table 8 (3 seeds - 3x the cost)
+make table9-resnet          # Table 9
+make table11-tau            # Table 11
+make table3-baselines       # Table 3, "w/o FedBR" column only
+make setup-vhl && make vhl-data && make table2-vhl   # Table 2
+```
+
+`make help` lists everything with its knobs.
+
+---
 
 Everything runs through `uv`, so there is no `conda`, no `pip install -r`, and
 no system Python to fight with. `uv sync` resolves from `pyproject.toml` and
-writes `uv.lock`; commit the lock file if you want byte-identical environments
-across instances.
+uses the committed `uv.lock`, so every instance gets the same environment.
 
 ### Why the dependency versions changed
 
@@ -297,6 +375,18 @@ released behaviour except where noted.
 * `networks.py` — `CIFAR_Vgg.forward` / `CIFAR_resnet.forward` use
   `flatten(1)` instead of `squeeze()`, which silently dropped the batch
   dimension for a final batch of size 1.
+* `datasets.py` — the LDA client split draws
+  `Dirichlet(0.1 * class_frequencies)`. Once a class has been fully consumed by
+  earlier clients its frequency is 0, and torch ≥ 1.8 rejects a non-positive
+  concentration (`ValueError: Expected parameter concentration ... to satisfy
+  the constraint`); torch 1.7 did not validate, which is why the released code
+  ran. The Dirichlet is now taken over the classes that still have samples,
+  with exhausted classes left at probability 0 — which is exactly what the
+  `reweight()` fallback a few lines below already assumed. Same fix in the
+  CIFAR10 and MNIST splits. Note this changes how many random draws the split
+  consumes, so the client partition is *not* bit-identical to the authors' —
+  it cannot be on a different torch version in any case.
+
 **Behaviour fix that changes the numbers (read this one)**
 
 * `datasets.py` — `RotatedCIFAR10.rotate_dataset` guarded on `if not angle:`,
@@ -309,20 +399,6 @@ released behaviour except where noted.
   reads as a slip rather than a design choice. Now fixed to match CIFAR100 and
   the paper's description. Revert that one line if you want the
   released-code numbers instead.
-
-**Required to run on modern PyTorch (continued)**
-
-* `datasets.py` — the LDA client split draws
-  `Dirichlet(0.1 * class_frequencies)`. Once a class has been fully consumed by
-  earlier clients its frequency is 0, and torch ≥ 1.8 rejects a non-positive
-  concentration (`ValueError: Expected parameter concentration ... to satisfy
-  the constraint`); torch 1.7 did not validate, which is why the released code
-  ran. The Dirichlet is now taken over the classes that still have samples,
-  with exhausted classes left at probability 0 — which is exactly what the
-  `reweight()` fallback a few lines below already assumed. Same fix in the
-  CIFAR10 and MNIST splits. Note this changes how many random draws the split
-  consumes, so the client partition is *not* bit-identical to the authors' —
-  it cannot be on a different torch version in any case.
 
 **Required for `--algorithm FedBR` to start at all**
 
