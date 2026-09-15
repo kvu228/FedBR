@@ -197,7 +197,12 @@ if __name__ == "__main__":
                 args.train_envs, hparams)
             if cache_path is not None:
                 print('Caching dataset to {}'.format(cache_path))
-                torch.save(dataset, cache_path)
+                # Write-then-rename: two runs started in parallel (one per GPU)
+                # would otherwise write the same path at the same time and can
+                # leave a truncated file behind. os.replace is atomic.
+                tmp_path = '{}.tmp.{}'.format(cache_path, os.getpid())
+                torch.save(dataset, tmp_path)
+                os.replace(tmp_path, cache_path)
         if cache_path is not None:
             # Building the dataset consumes RNG draws, so re-seed here to make
             # a cached run and a freshly-built run follow the same stream.

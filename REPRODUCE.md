@@ -176,6 +176,23 @@ A full 1000-round run is 50 000 steps, so roughly:
 `make table1` is nine such runs — on the order of two GPU-days on one card.
 Options if that is too much:
 
+* **Use both cards of a two-GPU instance.** `train_fed.py` has no
+  DataParallel/DDP, so one run occupies exactly one GPU and a second card is
+  only useful for a second experiment — which means one 2-GPU instance does the
+  work of two 1-GPU instances, at a shared dataset cache and one set of setup
+  costs. Run `make data` **first** so the split is built once, then two shells:
+
+  ```bash
+  tmux new -s g0; make table1-gpu0     # FedBR-family runs
+  tmux new -s g1; make table1-gpu1     # the rest
+  ```
+
+  The two lists are balanced by the per-step costs in Table 7 (FedBR is ~2× the
+  cost of FedAvg), so both finish in roughly 24 h rather than 49 h serial.
+  Override `GPU0_RUNS` / `GPU1_RUNS` to re-split. Do **not** start both shells
+  before `make data`: they would each spend ~13 minutes building the same split.
+  Do **not** use `make -j2 table1` either — every job would inherit `DEVICE=0`
+  and pile onto one card.
 * Run targets individually on separate instances (`make run-fedavg`,
   `make run-fedbr`, …) — they share nothing but the dataset cache.
 * `ROUNDS=300` reproduces the ordering of the methods and most of the

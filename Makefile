@@ -129,6 +129,10 @@ help:
 	@echo "  table11-tau        Table 11: FedBR tau1/tau2 sweep"
 	@echo "  all                table1 + table5-100clients + table11-tau"
 	@echo ""
+	@echo "Two GPUs on one instance ('make data' first, then two shells)"
+	@echo "  table1-gpu0        FedBR-family runs on GPU 0"
+	@echo "  table1-gpu1        the rest on GPU 1"
+	@echo ""
 	@echo "Single runs   run-local run-fedavg run-fedprox run-moon run-dann"
 	@echo "              run-groupdro run-fedbr run-mixup run-fedmix"
 	@echo "              run-fedbr-mixup run-fedntd run-feddecorr run-fedcm"
@@ -241,6 +245,22 @@ table1: run-fedavg run-fedprox run-moon run-dann run-groupdro run-fedbr \
         run-mixup run-fedmix run-fedbr-mixup
 	@$(MAKE) summarize
 	@$(MAKE) figures
+
+# Two GPUs on one instance: `make data` once, then run these in two shells.
+# There is no DataParallel/DDP in train_fed.py, so one run uses one GPU; the
+# only way to use a second card is a second experiment. The lists are balanced
+# by the per-step costs in Table 7 (FedBR is ~2x FedAvg), not by run count.
+GPU0_RUNS ?= run-fedbr run-fedbr-mixup run-mixup
+GPU1_RUNS ?= run-fedavg run-fedprox run-moon run-dann run-groupdro run-fedmix
+
+.PHONY: table1-gpu0 table1-gpu1
+table1-gpu0:
+	@for t in $(GPU0_RUNS); do $(MAKE) $$t DEVICE=0 || exit 1; done
+	@echo ">>> GPU 0 done. Run 'make summarize' once the other shell finishes too."
+
+table1-gpu1:
+	@for t in $(GPU1_RUNS); do $(MAKE) $$t DEVICE=1 || exit 1; done
+	@echo ">>> GPU 1 done. Run 'make summarize' once the other shell finishes too."
 
 .PHONY: table3-baselines
 table3-baselines: run-fedavg run-fedcm run-feddecorr run-fedntd
