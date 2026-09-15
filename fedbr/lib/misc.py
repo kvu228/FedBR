@@ -12,7 +12,6 @@ from shutil import copyfile
 from collections import OrderedDict, defaultdict
 from numbers import Number
 import operator
-from cv2 import transform
 from torchvision import transforms
 from torch.utils.data import TensorDataset
 

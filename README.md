@@ -10,20 +10,38 @@ Federated Learning (FL) is a way for machines to learn from data that is kept lo
 
 ## How to run
 
-### Requirments
-To run the code in this repository, be sure to install the following packages:
+### Install (uv)
+
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). On a fresh
+Linux + CUDA box (e.g. a vast.ai instance):
+
+```bash
+bash setup_vastai.sh     # installs uv, syncs the env, downloads CIFAR10
+make smoke               # ~2 min end-to-end check
+make help                # all reproduction targets
 ```
-numpy==1.20.3
-wilds==1.2.2
-imageio==2.9.0
-gdown==3.13.0
-torchvision==0.8.2
-torch==1.7.1
-tqdm==4.62.2
-backpack==0.1
-parameterized==0.8.1
-Pillow==8.3.2
+
+or, if `uv` is already installed:
+
+```bash
+uv sync                  # CUDA wheels on Linux, CPU wheels elsewhere
+uv run python -m fedbr.scripts.train_fed --help
 ```
+
+The optional extras `--extra wilds` (WILDS datasets) and `--extra vhl`
+(StyleGAN-v2 virtual data for the VHL baseline) are not needed for CIFAR10.
+
+The original pins (`torch==1.7.1`, `numpy==1.20.3`, ...) are kept in
+`requirements.txt` for reference, but have no wheels for modern GPUs or recent
+Python; `pyproject.toml` pins the modern equivalents instead.
+
+### Reproducing the CIFAR10 experiments
+
+`make table1` runs the CIFAR10 column of Table 1, `make summarize` prints the
+accuracy / rounds-to-threshold table, and `make figures` plots the convergence
+curves. See **[REPRODUCE.md](REPRODUCE.md)** for the full target list, the
+experimental settings from Appendix A, the GPU cost of each target, and a list
+of the paper results that the released code cannot reproduce.
 
 ### A quick start
 The code is built on the top of [DomainBed](https://github.com/facebookresearch/DomainBed). You can find all algorithm implementations in `algorithms.py`. 

@@ -138,7 +138,7 @@ class CIFAR_Vgg(nn.Module):
 
     def __init__(self, input_shape):
         super(CIFAR_Vgg, self).__init__()
-        self.network = torchvision.models.vgg11(pretrained=False).features
+        self.network = torchvision.models.vgg11(weights=None).features
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.n_outputs = 512
         self.n_outputs_feature = 512
@@ -147,21 +147,34 @@ class CIFAR_Vgg(nn.Module):
 
         x = self.network(x)
         x = self.avgpool(x)
-        return x.squeeze()
+        return x.flatten(1)
 
 class CIFAR_resnet(nn.Module):
 
-    def __init__(self, input_shape):
+    def __init__(self, input_shape, group_norm_num_groups=None):
         super(CIFAR_resnet, self).__init__()
-        self.network = torchvision.models.resnet18(pretrained=False)
+        if group_norm_num_groups is None:
+            norm_layer = None
+        else:
+            def norm_layer(planes, _g=group_norm_num_groups):
+                return nn.GroupNorm(_g, planes)
+        self.network = torchvision.models.resnet18(weights=None,
+                                                   norm_layer=norm_layer)
+        if group_norm_num_groups is not None:
+            # CIFAR stem: 3x3 stride-1 conv and no max-pool, otherwise a
+            # 32x32 input is downsampled to 1x1 before layer1.
+            self.network.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1,
+                                           padding=1, bias=False)
+            self.network.maxpool = Identity()
         self.network.fc = Identity()
         self.n_outputs = 512
+        self.n_outputs_feature = 512
 
     def forward(self, x):
 
         x = self.network(x)
         # x = self.avgpool(x)
-        return x.squeeze()
+        return x.flatten(1)
 
 
 
@@ -243,13 +256,26 @@ def Featurizer(input_shape, hparams):
     elif input_shape[1:3] == (28, 28):
         return MNIST_CNN(input_shape)
     elif input_shape[1:3] == (32, 32):
-        # print('here')
-        # return ResNet(input_shape, hparams)
-        # return CIFAR_resnet(input_shape)
-        return ViT(input_shape, hparams)
-        # return CIFAR_Vgg(input_shape)
-        # return MNIST_CNN(input_shape)
-        # return wide_resnet.Wide_ResNet(input_shape, 16, 2, 0.)
+        # The paper uses VGG11 for CIFAR10 and CCT for CIFAR100 (Appendix A);
+        # the released code hardcoded CCT, so the choice is an hparam now.
+        # 'cct' keeps the released default when no backbone is given.
+        backbone = hparams.get('backbone', 'cct') if hasattr(hparams, 'get')             else 'cct'
+        if backbone == 'cct':
+            return ViT(input_shape, hparams)
+        elif backbone == 'vgg11':
+            return CIFAR_Vgg(input_shape)
+        elif backbone == 'resnet18':
+            return CIFAR_resnet(input_shape)
+        elif backbone == 'resnet18_gn':
+            return CIFAR_resnet(input_shape, group_norm_num_groups=2)
+        elif backbone == 'resnet20_gn':
+            return ResNet(input_shape, hparams)
+        elif backbone == 'wide_resnet':
+            return wide_resnet.Wide_ResNet(input_shape, 16, 2, 0.)
+        elif backbone == 'mnist_cnn':
+            return MNIST_CNN(input_shape)
+        else:
+            raise NotImplementedError("Unknown backbone: {}".format(backbone))
     elif input_shape[1:3] == (224, 224):
         # return ResNet(input_shape, hparams)
         return CIFAR_Vgg(input_shape)

@@ -10,8 +10,14 @@ from torch.utils.data import TensorDataset, Subset
 from torchvision.datasets import MNIST, ImageFolder, CIFAR10, CIFAR100
 from torchvision.transforms.functional import rotate
 import torch.distributions.dirichlet as dirichlet
-from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
-from wilds.datasets.fmow_dataset import FMoWDataset
+try:
+    from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
+    from wilds.datasets.fmow_dataset import FMoWDataset
+except ImportError:
+    # `wilds` is only required by the WILDS* datasets below. The CIFAR10 /
+    # MNIST experiments do not need it, so keep it an optional dependency.
+    Camelyon17Dataset = None
+    FMoWDataset = None
 import random
 import numpy as np
 
@@ -32,6 +38,7 @@ DATASETS = [
     "DomainNet",
     "SVIRO",
     "RotatedCIFAR10",
+    "CleanCIFAR10",
     "RotatedCIFAR100",
     # WILDS datasets
     "WILDSCamelyon",
@@ -308,7 +315,14 @@ class MultipleEnvironmentCifar10(MultipleDomainDataset):
         
         for i in range(N):
             p = torch.tensor(classes_by_index_len) / sum(classes_by_index_len)
-            q = dirichlet.Dirichlet(0.1 * p).sample()
+            # Classes already exhausted by earlier clients have p == 0, and
+            # torch >= 1.8 validates that a Dirichlet concentration is strictly
+            # positive (torch 1.7 did not, which is why this went unnoticed).
+            # Sample over the remaining classes and leave the rest at 0, which
+            # is what the `reweight` fallback below assumes anyway.
+            available = p > 0
+            q = torch.zeros_like(p)
+            q[available] = dirichlet.Dirichlet(0.1 * p[available]).sample()
             while(len(clients_labels[i]) < M):
                 sampled_class = torch.multinomial(q, 1)
                 if classes_by_index_len[sampled_class] == 0:
@@ -415,7 +429,10 @@ class RotatedCIFAR10(MultipleEnvironmentCifar10):
         #     transforms.Lambda(lambda x: rotate(x, angle, fill=(0,),
         #         interpolation=torchvision.transforms.InterpolationMode.BILINEAR)),
         #     transforms.ToTensor()])
-        if not angle:
+        # `if not angle` also caught the *test* environment whose angle is 0,
+        # so the unrotated 0-degree test set was replaced by a randomly rotated
+        # one. RotatedCIFAR100.rotate_dataset already spells this `is None`.
+        if angle is None:
             angles = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135]
             p = torch.ones((10,)) / 10
             q = dirichlet.Dirichlet(1.0 * p).sample()
@@ -450,6 +467,24 @@ class RotatedCIFAR10(MultipleEnvironmentCifar10):
 
 
 
+class CleanCIFAR10(MultipleEnvironmentCifar10):
+    """CIFAR10 split by LDA only - no per-client rotation (Appendix A, Table 9).
+
+    `RotatedCIFAR10` cannot express this: it treats angle 0 as "sample a random
+    angle per image", so the angle has to be skipped explicitly.
+    """
+
+    def __init__(self, root, train_envs, hparams):
+        super(CleanCIFAR10, self).__init__(root, [None] * (train_envs + 10),
+                                           self.identity_dataset, (3, 32, 32,), 10)
+
+    def identity_dataset(self, images, labels, angle):
+        x = torch.zeros(len(images), 3, 32, 32)
+        for i in range(len(images)):
+            x[i] = images[i]
+        return TensorDataset(x, labels.view(-1))
+
+
 class MultipleEnvironmentMNIST(MultipleDomainDataset):
 
     def get_noniid_class_and_labels(self, original_images, original_labels, N):
@@ -467,7 +502,14 @@ class MultipleEnvironmentMNIST(MultipleDomainDataset):
         
         for i in range(N):
             p = torch.tensor(classes_by_index_len) / sum(classes_by_index_len)
-            q = dirichlet.Dirichlet(0.1 * p).sample()
+            # Classes already exhausted by earlier clients have p == 0, and
+            # torch >= 1.8 validates that a Dirichlet concentration is strictly
+            # positive (torch 1.7 did not, which is why this went unnoticed).
+            # Sample over the remaining classes and leave the rest at 0, which
+            # is what the `reweight` fallback below assumes anyway.
+            available = p > 0
+            q = torch.zeros_like(p)
+            q[available] = dirichlet.Dirichlet(0.1 * p[available]).sample()
             while(len(clients_labels[i]) < M):
                 sampled_class = torch.multinomial(q, 1)
                 if classes_by_index_len[sampled_class] == 0:

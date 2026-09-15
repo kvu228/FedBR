@@ -1,0 +1,53 @@
+[project]
+name = "fedbr"
+version = "0.1.0"
+description = "FedBR (ICML 2023) - reproduction of the CIFAR10 experiments"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+
+# NOTE on versions: the original requirements.txt pins torch==1.7.1 / numpy==1.20.3,
+# which have no wheels for modern GPUs (Ampere/Ada/Hopper) or recent Python.
+# The pins below are the closest modern equivalents; the few source-level API
+# changes this required are listed in REPRODUCE.md.
+dependencies = [
+    "torch==2.6.0",
+    "torchvision==0.21.0",
+    "numpy>=1.26,<3",
+    "tqdm>=4.62",
+    "imageio>=2.9",
+    "pillow>=9",
+    "matplotlib>=3.5",
+    "parameterized>=0.8",
+    "gdown>=4.0",
+]
+
+[project.optional-dependencies]
+# Only needed for the WILDS datasets (Camelyon17 / FMoW). Not used by CIFAR10.
+wilds = ["wilds>=2.0.0"]
+# Only needed to generate the StyleGAN-v2 virtual data used by the VHL baseline
+# (Table 2). Requires a CUDA GPU.
+# `aim` is deliberately left out: style_GAN_v2.py only uses it for optional
+# experiment logging, it has no wheels on several platforms, and resolving it
+# drags the whole lock through an sdist build. The import is now guarded.
+vhl = [
+    "fire>=0.4",
+    "einops>=0.4",
+    "kornia>=0.6",
+    "vector-quantize-pytorch>=0.4",
+]
+
+[tool.uv]
+# The repo is a plain source tree (PEP 420 namespace package, no __init__.py),
+# so do not try to build/install it - just manage the dependencies and run
+# everything from the repo root with `uv run python -m fedbr.scripts...`.
+package = false
+
+# CUDA wheels on Linux (vast.ai), plain PyPI wheels elsewhere (macOS/Windows dev).
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu124", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cu124", marker = "sys_platform == 'linux'" }]

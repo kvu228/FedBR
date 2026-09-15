@@ -1,1 +1,18 @@
 *.DS_Store
+
+# python / uv
+__pycache__/
+*.py[cod]
+.venv/
+.venv_old_backup/
+
+# editors
+.idea/
+.vscode/
+
+# experiment artefacts
+output/
+train_output/
+cache/
+figures/
+fedbr/data/

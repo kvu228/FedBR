@@ -137,9 +137,9 @@ class FedCM(Optimizer):
                         buf = param_state['momentum_buffer'] = torch.clone(d_p).detach()
                     else:
                         buf = param_state['momentum_buffer']
-                        buf.mul_(momentum).add_(1 - dampening, d_p)
+                        buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
                     if nesterov:
-                        d_p = d_p.add(momentum, buf)
+                        d_p = d_p.add(buf, alpha=momentum)
                     else:
                         d_p = buf
 
@@ -148,7 +148,7 @@ class FedCM(Optimizer):
                     d_p.mul_(1 - self.mu).add_(self.mu, delta.to(d_p.device))
                 # else:
                 #     print('first round')
-                p.data.add_(-group['lr'], d_p)
+                p.data.add_(d_p, alpha=-group['lr'])
 
         return loss
 
@@ -253,15 +253,15 @@ class FedProx(Optimizer):
                         buf = param_state['momentum_buffer'] = torch.clone(d_p).detach()
                     else:
                         buf = param_state['momentum_buffer']
-                        buf.mul_(momentum).add_(1 - dampening, d_p)
+                        buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
                     if nesterov:
-                        d_p = d_p.add(momentum, buf)
+                        d_p = d_p.add(buf, alpha=momentum)
                     else:
                         d_p = buf
 
                 # apply proximal update
                 d_p.add_(self.mu, p.data - param_state['old_init'])
-                p.data.add_(-group['lr'], d_p)
+                p.data.add_(d_p, alpha=-group['lr'])
 
         return loss
 
@@ -329,16 +329,16 @@ class SCAFFOLD_OPT(Optimizer):
                         buf = param_state['momentum_buffer'] = torch.clone(d_p).detach()
                     else:
                         buf = param_state['momentum_buffer']
-                        buf.mul_(momentum).add_(1 - dampening, d_p)
+                        buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
                     if nesterov:
-                        d_p = d_p.add(momentum, buf)
+                        d_p = d_p.add(buf, alpha=momentum)
                     else:
                         d_p = buf
 
                 # apply proximal update
                 # d_p.add_(self.mu, p.data - param_state['old_init'])
-                p.data.add_(-group['lr'], d_p)
-                p.data.add_(-1.0, r)
+                p.data.add_(d_p, alpha=-group['lr'])
+                p.data.add_(r, alpha=-1.0)
                 # print(r)
 
         return loss
@@ -402,10 +402,8 @@ class ERM(Algorithm):
         #     weight_decay=self.hparams['weight_decay']
         # )
         self.optimizer = torch.optim.SGD(self.network.parameters(),
-        lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'], momentum=0.9)
-
-        # self.optimizer = torch.optim.SGD(self.network.parameters(),
-        # lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'])
+        lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'],
+        momentum=self.hparams.get('momentum', 0.9))
 
         self.register_buffer('update_count', torch.tensor([0]))
 
@@ -565,7 +563,8 @@ class FedProx_algo(ERM):
         # self.optimizer = FedProx(self.network.parameters(),
         # lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'], mu = 0.1, momentum=0.9)
         self.optimizer = FedProx(self.network.parameters(),
-        lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'], mu = 0.1)
+        lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'],
+        mu = self.hparams.get('fedprox_mu', 0.1))
 
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
@@ -587,7 +586,8 @@ class FedProx_algo(ERM):
         # self.optimizer = FedProx(self.network.parameters(),
         # lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'], mu = 0.1, momentum=0.9)
         self.optimizer = FedProx(self.network.parameters(),
-        lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'], mu = 0.1)
+        lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'],
+        mu = self.hparams.get('fedprox_mu', 0.1))
 
         self.register_buffer('update_count', torch.tensor([0]))
 
@@ -808,7 +808,7 @@ class FedNTD(ERM):
 
 class NaiveMix(ERM):
     def update(self, minibatches, augmentation = None):
-        lambda_fedmix = 0.1
+        lambda_fedmix = self.hparams.get('fedmix_lambda', 0.1)
         all_x = torch.cat([x for x,y in minibatches]).requires_grad_()
         all_y = torch.cat([y for x,y in minibatches])
         all_augmentation_x = torch.cat([x for x, y in augmentation])
@@ -833,7 +833,7 @@ class FedMix(ERM):
 
 
     def update(self, minibatches, augmentation = None):
-        lambda_fedmix = 0.1
+        lambda_fedmix = self.hparams.get('fedmix_lambda', 0.1)
         all_x = torch.cat([x for x,y in minibatches]).requires_grad_()
         all_y = torch.cat([y for x,y in minibatches])
         all_augmentation_x = torch.cat([x for x, y in augmentation])
@@ -1088,11 +1088,11 @@ class FedBR(Algorithm):
 
     def update(self, minibatches, unlabeled=None):
         device = minibatches[0][0].device
-        mu = 0.5
-        lam = 1.0
+        mu = self.hparams.get('fedbr_mu', 0.5)
+        lam = self.hparams.get('fedbr_lambda', 1.0)
         gamma = 1.0
-        tau1 = 2.0
-        tau2 = 2.0
+        tau1 = self.hparams.get('fedbr_tau1', 2.0)
+        tau2 = self.hparams.get('fedbr_tau2', 2.0)
         repeat = 1
         zeta = 1.5
         # feature_dim = 16 * 4 * 4

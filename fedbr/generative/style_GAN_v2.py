@@ -42,7 +42,13 @@ try:
 except:
     APEX_AVAILABLE = False
 
-import aim
+try:
+    import aim
+except ImportError:
+    # Only used for optional experiment logging (`Trainer(log=True)`); the
+    # pretrained-free generator used by `generate.py` never touches it, and
+    # aim has no wheels on several platforms.
+    aim = None
 
 assert torch.cuda.is_available(), 'You need to have an Nvidia GPU with CUDA installed.'
 

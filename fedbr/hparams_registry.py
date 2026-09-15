@@ -29,6 +29,13 @@ def _hparams(algorithm, dataset, random_seed):
 
     _hparam('data_augmentation', True, lambda r: True)
     _hparam('resnet18', False, lambda r: False)
+    # Backbone for 32x32 inputs. Appendix A: VGG11 for CIFAR10, CCT for
+    # CIFAR100. The released code hardcoded CCT for both.
+    _cifar10 = dataset in ('RotatedCIFAR10', 'CleanCIFAR10')
+    _hparam('backbone', 'vgg11' if _cifar10 else 'cct',
+            lambda r: 'vgg11' if _cifar10 else 'cct')
+    # SGD momentum of the local solver. Appendix A: 0.9 when using CCT/ResNet.
+    _hparam('momentum', 0.9, lambda r: 0.9)
     _hparam('resnet_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
     _hparam('class_balanced', False, lambda r: False)
     # TODO: nonlinear classifiers disabled
@@ -38,7 +45,7 @@ def _hparams(algorithm, dataset, random_seed):
     # Algorithm-specific hparam definitions. Each block of code below
     # corresponds to exactly one algorithm.
 
-    if algorithm in ['DANN', 'CDANN', 'FedBR_DANN', 'FedBR_DCDANN', 'FedBR_DCDANN_Lite', 'AugCA', 'Moon', 'AugCA_O', 'FedBR_Moon', 'FedBR_AugCA', 'FedBR_AugCA_Self']:
+    if algorithm in ['DANN', 'CDANN', 'FedBR', 'FedBR_GroupDRO', 'FedBR_DANN', 'FedBR_DCDANN', 'FedBR_DCDANN_Lite', 'AugCA', 'Moon', 'AugCA_O', 'FedBR_Moon', 'FedBR_AugCA', 'FedBR_AugCA_Self']:
         _hparam('lambda', 0.01, lambda r: 10**r.uniform(-2, 2))
         _hparam('weight_decay_d', 0., lambda r: 10**r.uniform(-6, -2))
         _hparam('d_steps_per_g_step', 1, lambda r: int(2**r.uniform(0, 3)))
@@ -66,7 +73,19 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == "Mixup" or algorithm == 'FedCM_algo':
         _hparam('mixup_alpha', 0.2, lambda r: 10**r.uniform(-1, -1))
 
-    elif algorithm == "GroupDRO" or algorithm == "FedBR_GroupDRO":
+    if algorithm == 'FedProx_algo':
+        _hparam('fedprox_mu', 0.1, lambda r: r.choice([0.001, 0.01, 0.1]))
+
+    if algorithm in ['FedMix', 'NaiveMix']:
+        _hparam('fedmix_lambda', 0.1, lambda r: r.choice([0.01, 0.1, 0.2]))
+
+    if algorithm.startswith('FedBR'):
+        _hparam('fedbr_mu', 0.5, lambda r: 0.5)
+        _hparam('fedbr_lambda', 1.0, lambda r: 1.0)
+        _hparam('fedbr_tau1', 2.0, lambda r: 2.0)
+        _hparam('fedbr_tau2', 2.0, lambda r: 2.0)
+
+    if algorithm == "GroupDRO" or algorithm == "FedBR_GroupDRO":
         _hparam('groupdro_eta', 1e-2, lambda r: 10**r.uniform(-3, -1))
 
     elif algorithm == "MMD" or algorithm == "CORAL":

@@ -12,12 +12,13 @@ import uuid
 
 import numpy as np
 import PIL
-from parso import parse
 import torch
 import torchvision
 import torch.utils.data
 import torch.nn.functional as F
 import copy
+
+from torch.utils.data import Subset
 
 from fedbr import datasets
 from fedbr import hparams_registry
@@ -111,6 +112,22 @@ if __name__ == "__main__":
     parser.add_argument('--use_Mixture', action='store_true')
     parser.add_argument('--use_Mixup', action='store_true')
     parser.add_argument('--virtual_set', type=str, default='style_GAN_init_28_c100_200')
+    parser.add_argument('--cache_dir', type=str, default=None,
+        help='Cache the (slow) non-iid split + rotation of the dataset here '
+             'and reuse it across runs with the same dataset/clients/seed.')
+    parser.add_argument('--n_workers', type=int, default=None,
+        help='DataLoader workers per loader. The default (8) spawns 8 workers '
+             'for each of the ~30 loaders, which exhausts /dev/shm in most '
+             'containers; the datasets are in-memory tensors, so 0 is both '
+             'safe and usually fastest.')
+    parser.add_argument('--eval_subsample', type=int, default=0,
+        help='Cap every evaluation loader at N evenly-spaced samples. 0 (the '
+             'default) evaluates the full splits, which is what the paper '
+             'reports; a small value makes a smoke test finish in seconds.')
+    parser.add_argument('--eval_test_only', action='store_true',
+        help='Only evaluate the held-out client environments. The paper only '
+             'reports accuracy on the local test datasets, and evaluating the '
+             'training environments as well roughly triples the eval cost.')
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -167,13 +184,33 @@ if __name__ == "__main__":
     print('device: {}'.format(device))
 
     if args.dataset in vars(datasets):
-        dataset = vars(datasets)[args.dataset](args.data_dir,
-            args.train_envs, hparams)
+        cache_path = None
+        if args.cache_dir:
+            os.makedirs(args.cache_dir, exist_ok=True)
+            cache_path = os.path.join(args.cache_dir, '{}_envs{}_seed{}.pt'.format(
+                args.dataset, args.train_envs, args.seed))
+        if cache_path is not None and os.path.exists(cache_path):
+            print('Loading cached dataset from {}'.format(cache_path))
+            dataset = torch.load(cache_path, weights_only=False)
+        else:
+            dataset = vars(datasets)[args.dataset](args.data_dir,
+                args.train_envs, hparams)
+            if cache_path is not None:
+                print('Caching dataset to {}'.format(cache_path))
+                torch.save(dataset, cache_path)
+        if cache_path is not None:
+            # Building the dataset consumes RNG draws, so re-seed here to make
+            # a cached run and a freshly-built run follow the same stream.
+            random.seed(args.seed)
+            np.random.seed(args.seed)
+            torch.manual_seed(args.seed)
         args.test_envs = [i for i in range(args.train_envs, len(dataset))]
+        if args.n_workers is not None:
+            dataset.N_WORKERS = args.n_workers
     else:
         raise NotImplementedError
     
-    if 'FedBR' in args.algorithm:    
+    if 'FedBR' in args.algorithm and args.use_Mixture:
         # proxy_mean = [0.5070751592371323, 0.48654887331495095, 0.4409178433670343]
         # proxy_std = [0.2673342858792401, 0.2564384629170883, 0.27615047132568404]
         if 'CIFAR100' in args.dataset:
@@ -184,7 +221,7 @@ if __name__ == "__main__":
                     # transforms.Resize((28, 28)),
                     transforms.Normalize(proxy_mean, proxy_std)
                 ])
-            proxy_dataset = CIFAR10('./fedbr/data/CIFAR10', train=True, download=True, transform=transform_proxy)
+            proxy_dataset = CIFAR10(args.data_dir, train=True, download=True, transform=transform_proxy)
         elif 'CIFAR10' in args.dataset:
             proxy_mean = [0.5070751592371323, 0.48654887331495095, 0.4409178433670343]
             proxy_std = [0.2673342858792401, 0.2564384629170883, 0.27615047132568404]
@@ -193,7 +230,7 @@ if __name__ == "__main__":
                     # transforms.Resize((28, 28)),
                     transforms.Normalize(proxy_mean, proxy_std)
                 ])
-            proxy_dataset = CIFAR100('./fedbr/data/CIFAR10', train=True, download=True, transform=transform_proxy)
+            proxy_dataset = CIFAR100(args.data_dir, train=True, download=True, transform=transform_proxy)
         else:
             raise NotImplementedError
     elif 'VHL' in args.algorithm:
@@ -263,8 +300,14 @@ if __name__ == "__main__":
         for i, (env, env_weights) in enumerate(in_splits)
         if i not in args.test_envs]
 
+    def _subsample(env):
+        if not args.eval_subsample or len(env) <= args.eval_subsample:
+            return env
+        stride = max(1, len(env) // args.eval_subsample)
+        return Subset(env, list(range(0, len(env), stride))[:args.eval_subsample])
+
     train_loaders_fast = [FastDataLoader(
-        dataset=env,
+        dataset=_subsample(env),
         batch_size=hparams['batch_size'],
         num_workers=dataset.N_WORKERS)
         for i, (env, env_weights) in enumerate(in_splits)
@@ -278,18 +321,26 @@ if __name__ == "__main__":
     #     for i, (env, env_weights) in enumerate(uda_splits)
     #     if i in args.test_envs]
 
+    def _keep_env(i):
+        return (not args.eval_test_only) or (i in args.test_envs)
+
+    eval_specs = []
+    eval_specs += [('env{0}_in'.format(str(i).zfill(2)), env)
+        for i, (env, _) in enumerate(in_splits) if _keep_env(i)]
+    eval_specs += [('env{0}_out'.format(str(i).zfill(2)), env)
+        for i, (env, _) in enumerate(out_splits) if _keep_env(i)]
+    eval_specs += [('env{0}_uda'.format(str(i).zfill(2)), env)
+        for i, (env, _) in enumerate(uda_splits)]
+
+    eval_specs = [(name, _subsample(env)) for name, env in eval_specs]
+
+    eval_loader_names = [name for name, _ in eval_specs]
     eval_loaders = [FastDataLoader(
         dataset=env,
         batch_size=64,
         num_workers=dataset.N_WORKERS)
-        for env, _ in (in_splits + out_splits + uda_splits)]
-    eval_weights = [None for _, weights in (in_splits + out_splits + uda_splits)]
-    eval_loader_names = ['env{0}_in'.format(str(i).zfill(2))
-        for i in range(len(in_splits))]
-    eval_loader_names += ['env{0}_out'.format(str(i).zfill(2))
-        for i in range(len(out_splits))]
-    eval_loader_names += ['env{0}_uda'.format(str(i).zfill(2))
-        for i in range(len(uda_splits))]
+        for _, env in eval_specs]
+    eval_weights = [None for _ in eval_specs]
 
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
     algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
