@@ -124,10 +124,15 @@ if __name__ == "__main__":
         help='Cap every evaluation loader at N evenly-spaced samples. 0 (the '
              'default) evaluates the full splits, which is what the paper '
              'reports; a small value makes a smoke test finish in seconds.')
-    parser.add_argument('--eval_test_only', action='store_true',
-        help='Only evaluate the held-out client environments. The paper only '
-             'reports accuracy on the local test datasets, and evaluating the '
-             'training environments as well roughly triples the eval cost.')
+    parser.add_argument('--eval_envs', default='local+global',
+        choices=['local', 'local+global', 'all'],
+        help="Which splits to evaluate at each checkpoint. 'local': the 20%% "
+             "held-out split of every training client -- the paper's 'local "
+             "test datasets', what Table 1 reports, 10k images. "
+             "'local+global' (default): also the in-split of every held-out "
+             "test environment, a balanced test set per rotation angle "
+             "(the paper's Table 6 setting). 'all': every in/out split of "
+             "every environment, as the released code did.")
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -326,14 +331,20 @@ if __name__ == "__main__":
     #     for i, (env, env_weights) in enumerate(uda_splits)
     #     if i in args.test_envs]
 
-    def _keep_env(i):
-        return (not args.eval_test_only) or (i in args.test_envs)
+    def _keep(i, split):
+        if args.eval_envs == 'all':
+            return True
+        is_test = i in args.test_envs
+        if not is_test and split == 'out':
+            return True          # a training client's local test dataset
+        return (args.eval_envs == 'local+global' and is_test
+                and split == 'in')
 
     eval_specs = []
     eval_specs += [('env{0}_in'.format(str(i).zfill(2)), env)
-        for i, (env, _) in enumerate(in_splits) if _keep_env(i)]
+        for i, (env, _) in enumerate(in_splits) if _keep(i, 'in')]
     eval_specs += [('env{0}_out'.format(str(i).zfill(2)), env)
-        for i, (env, _) in enumerate(out_splits) if _keep_env(i)]
+        for i, (env, _) in enumerate(out_splits) if _keep(i, 'out')]
     eval_specs += [('env{0}_uda'.format(str(i).zfill(2)), env)
         for i, (env, _) in enumerate(uda_splits)]
 

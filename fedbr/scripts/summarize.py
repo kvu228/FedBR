@@ -3,18 +3,28 @@
 For every run directory containing a `results.jsonl`, this computes
 
   * Acc (%)          - the mean of the maximum 5 accuracies over communication
-                       rounds, on the held-out client test environments
-                       (Table 1 / 2 / 4 / 5 / 8 / 9 of the paper).
+                       rounds (Table 1 / 2 / 4 / 5 / 8 / 9 of the paper).
   * Rounds for X%    - the first communication round whose accuracy reaches the
                        threshold X, plus the speed-up relative to the baseline
                        run (FedAvg by default), printed as "(1.3X)".
 
-Accuracy per round follows the DomainBed convention used by the repo's own
-`model_selection.py`: the `in` split of each test environment. `--split full`
-reweights `in`/`out` back into the complete test set instead.
+Two accuracies are tracked, selected with --metric:
+
+  local   (default)  the 20% held-out split of every *training* client, i.e.
+                     data with that client's own label skew and rotation mix.
+                     This is the paper's "mean accuracy on all local test
+                     datasets" (Figure 5) and what Table 1 reports.
+  global             the in-split of every held-out *test* environment: ten
+                     copies of the CIFAR10 test set, each rotated by one fixed
+                     angle. Balanced and covering every angle -- the "balanced
+                     global test datasets" of the paper's Table 6, where the
+                     same FedAvg scores 46.37 instead of Table 1's 58.99.
+
+Whichever is primary, the other is shown as a secondary column when the run
+logged it (train_fed.py --eval_envs local+global).
 
 Usage:
-    python -m fedbr.scripts.summarize output/cifar10 --threshold 55
+    python -m fedbr.scripts.summarize output/cifar10 --threshold 55 60
 """
 
 import argparse
@@ -22,6 +32,13 @@ import json
 import os
 import sys
 from collections import OrderedDict
+
+METRICS = OrderedDict([
+    ('local', "20% held-out split of each training client "
+              "(the paper's 'local test datasets')"),
+    ('global', "in-split of each held-out test environment "
+               "(balanced, one rotation angle each)"),
+])
 
 
 def load_records(run_dir):
@@ -42,88 +59,81 @@ def load_records(run_dir):
     return records
 
 
-def test_env_ids(record):
-    """Environment indices held out as local test datasets."""
+def metric_keys(record, metric):
     args = record.get('args', {})
-    if 'test_envs' in args and args['test_envs']:
-        return list(args['test_envs'])
-    # train_fed.py always holds out the environments after the training ones
     n_train = args.get('train_envs', 10)
-    ids = []
-    i = n_train
-    while 'env{0}_in_acc'.format(str(i).zfill(2)) in record:
-        ids.append(i)
-        i += 1
-    return ids
+    if metric == 'local':
+        envs = range(n_train)
+        split = 'out'
+    else:
+        envs = args.get('test_envs') or range(n_train, n_train + 10)
+        split = 'in'
+    return ['env{0}_{1}_acc'.format(str(i).zfill(2), split) for i in envs]
 
 
-def record_accuracy(record, split, holdout_fraction):
-    accs = []
-    for i in test_env_ids(record):
-        in_key = 'env{0}_in_acc'.format(str(i).zfill(2))
-        out_key = 'env{0}_out_acc'.format(str(i).zfill(2))
-        if in_key not in record:
+def accuracy_curve(records, metric, local_steps):
+    """[(round, acc%)] -- only rounds where every env of the metric is logged,
+    so a partially evaluated run never averages over fewer environments."""
+    curve = []
+    for r in records:
+        keys = metric_keys(r, metric)
+        if not keys or any(k not in r for k in keys):
             continue
-        if split == 'full' and out_key in record:
-            accs.append((1.0 - holdout_fraction) * record[in_key]
-                        + holdout_fraction * record[out_key])
-        else:
-            accs.append(record[in_key])
-    if not accs:
-        return None
-    return sum(accs) / len(accs)
+        acc = sum(r[k] for k in keys) / len(keys)
+        curve.append((r['step'] / float(local_steps), 100.0 * acc))
+    return curve
 
 
-def summarize_run(run_dir, split, top_k, thresholds):
+def top_k_mean(curve, k):
+    accs = sorted((a for _, a in curve), reverse=True)[:k]
+    return sum(accs) / len(accs) if accs else None
+
+
+def summarize_run(run_dir, metric, top_k, thresholds):
     records = load_records(run_dir)
     if not records:
         return None
 
-    local_steps = records[0].get('args', {}).get('local_steps', 1) or 1
-    holdout_fraction = records[0].get('args', {}).get('holdout_fraction', 0.2)
+    args = records[0].get('args', {})
+    local_steps = args.get('local_steps', 1) or 1
+    other = 'global' if metric == 'local' else 'local'
 
-    curve = []  # (round, acc)
-    for r in records:
-        acc = record_accuracy(r, split, holdout_fraction)
-        if acc is None:
-            continue
-        curve.append((r['step'] / float(local_steps), 100.0 * acc))
-    if not curve:
-        return None
+    curve = accuracy_curve(records, metric, local_steps)
+    other_curve = accuracy_curve(records, other, local_steps)
 
-    accs = sorted((a for _, a in curve), reverse=True)
-    top = accs[:top_k]
-
-    # train_fed.py logs the mean seconds/step over each checkpoint interval.
-    # Projected to 1000 rounds this is the number to compare GPUs on, and to
-    # decide whether a full run is affordable on the card you just rented.
+    # train_fed.py logs the mean seconds/step over each checkpoint interval
+    # (training only, evaluation excluded). Projected to 1000 rounds this is
+    # the number to compare GPUs on.
     step_times = [r['step_time'] for r in records if 'step_time' in r]
     hours_per_1000r = None
     if step_times:
-        mean_step = sum(step_times) / len(step_times)
-        hours_per_1000r = mean_step * local_steps * 1000 / 3600.0
+        hours_per_1000r = (sum(step_times) / len(step_times)
+                           * local_steps * 1000 / 3600.0)
     peak_mem = max([r.get('mem_gb', 0.0) for r in records] or [0.0])
 
-    rounds_to = OrderedDict()
-    for t in thresholds:
-        hit = next((rnd for rnd, a in curve if a >= t), None)
-        rounds_to[t] = hit
-
-    return {
+    result = {
         'name': os.path.basename(os.path.normpath(run_dir)),
         'dir': run_dir,
-        'acc': sum(top) / len(top),
-        'best': accs[0],
-        'final': curve[-1][1],
-        'rounds_done': curve[-1][0],
-        'rounds_to': rounds_to,
-        'curve': curve,
+        'algorithm': args.get('algorithm', '?'),
+        'seed': args.get('seed', '?'),
+        'done': os.path.exists(os.path.join(run_dir, 'done')),
         'hours_per_1000r': hours_per_1000r,
         'peak_mem': peak_mem,
-        'done': os.path.exists(os.path.join(run_dir, 'done')),
-        'algorithm': records[0].get('args', {}).get('algorithm', '?'),
-        'seed': records[0].get('args', {}).get('seed', '?'),
+        'curve': curve,
+        'other_curve': other_curve,
+        'other_acc': top_k_mean(other_curve, top_k),
+        'rounds_done': records[-1]['step'] / float(local_steps),
+        'has_metric': bool(curve),
     }
+    if not curve:
+        return result
+
+    result['acc'] = top_k_mean(curve, top_k)
+    result['best'] = max(a for _, a in curve)
+    result['rounds_to'] = OrderedDict(
+        (t, next((rnd for rnd, a in curve if a >= t), None))
+        for t in thresholds)
+    return result
 
 
 def find_runs(roots):
@@ -140,7 +150,6 @@ def find_runs(roots):
             runs.append(root)
             continue
         for dirpath, dirnames, filenames in os.walk(root):
-            # prune scratch subtrees, but never the root the user asked for
             dirnames[:] = [d for d in dirnames if not d.startswith('_')]
             if 'results.jsonl' in filenames:
                 runs.append(dirpath)
@@ -156,19 +165,22 @@ def fmt_rounds(value, baseline):
     return cell
 
 
+def fmt(value, spec='{:.2f}'):
+    return '-' if value is None else spec.format(value)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('roots', nargs='+',
         help='Run directories, or a parent directory to scan recursively.')
+    parser.add_argument('--metric', choices=list(METRICS), default='local',
+        help='Primary accuracy (default: local, as in the paper).')
     parser.add_argument('--threshold', type=float, nargs='+', default=[55.0],
         help='Target accuracies for the "rounds to reach" columns '
              '(paper uses 55 and 60 for CIFAR10).')
     parser.add_argument('--top_k', type=int, default=5,
         help='Average the top-K rounds (paper: 5).')
-    parser.add_argument('--split', choices=['in', 'full'], default='in',
-        help="'in' = DomainBed convention (in-split of each test env); "
-             "'full' = reweighted in+out.")
     parser.add_argument('--baseline', type=str, default='fedavg',
         help='Run name used as the 1.0X reference for the speed-up column.')
     parser.add_argument('--csv', type=str, default=None,
@@ -181,28 +193,35 @@ def main():
               file=sys.stderr)
         return 1
 
-    rows = [r for r in (summarize_run(d, args.split, args.top_k, args.threshold)
-                        for d in runs) if r]
+    all_rows = [r for r in (summarize_run(d, args.metric, args.top_k,
+                                          args.threshold) for d in runs) if r]
+    rows = [r for r in all_rows if r['has_metric']]
+    missing = [r['name'] for r in all_rows if not r['has_metric']]
     if not rows:
-        print('No usable records found.', file=sys.stderr)
+        print("No run logged the '{}' metric. Runs found: {}. Older runs made "
+              "with --eval_test_only only logged 'global'; re-score their "
+              "model.pkl with fedbr.scripts.eval_checkpoint, or pass "
+              "--metric global.".format(args.metric, ', '.join(missing)),
+              file=sys.stderr)
         return 1
 
+    other = 'global' if args.metric == 'local' else 'local'
     base = next((r for r in rows if r['name'] == args.baseline), None)
 
-    header = ['Run', 'Algorithm', 'Acc (%)', 'Best (%)', 'Rounds run']
+    header = ['Run', 'Algorithm', 'Acc (%)', 'Best (%)',
+              '{} (%)'.format(other.capitalize()), 'Rounds run']
     header += ['Rounds for {:g}%'.format(t) for t in args.threshold]
     header += ['h/1000rd', 'VRAM (GB)', 'Finished']
 
     table = []
     for r in rows:
-        row = [r['name'], r['algorithm'], '{:.2f}'.format(r['acc']),
-               '{:.2f}'.format(r['best']), '{:.0f}'.format(r['rounds_done'])]
+        row = [r['name'], r['algorithm'], fmt(r['acc']), fmt(r['best']),
+               fmt(r['other_acc']), fmt(r['rounds_done'], '{:.0f}')]
         for t in args.threshold:
             base_rounds = base['rounds_to'][t] if base else None
             row.append(fmt_rounds(r['rounds_to'][t], base_rounds))
-        row.append('-' if r['hours_per_1000r'] is None
-                   else '{:.1f}'.format(r['hours_per_1000r']))
-        row.append('{:.1f}'.format(r['peak_mem']))
+        row.append(fmt(r['hours_per_1000r'], '{:.1f}'))
+        row.append(fmt(r['peak_mem'], '{:.1f}'))
         row.append('yes' if r['done'] else 'NO (partial)')
         table.append(row)
 
@@ -214,15 +233,20 @@ def main():
     for row in table:
         print('| ' + ' | '.join(c.ljust(w) for c, w in zip(row, widths)) + ' |')
 
-    print('\nAcc (%) = mean of the top-{} rounds, {} split of the held-out '
-          'client environments.'.format(args.top_k, args.split))
+    print('\nAcc (%) = mean of the top-{} rounds on the {}.'.format(
+        args.top_k, METRICS[args.metric]))
+    print('{} (%) = the same on the {}.'.format(other.capitalize(),
+                                                 METRICS[other]))
     total = sum(r['hours_per_1000r'] for r in rows
                 if r['hours_per_1000r'] is not None)
     if total:
-        print('h/1000rd = projected hours for a full 1000-round run on this '
-              'GPU, from the logged seconds/step.')
+        print('h/1000rd = projected training hours for a full 1000-round run '
+              'on this GPU (evaluation not included).')
         print('These {} runs project to {:.0f} GPU-hours total, {:.0f} h per '
               'card if split over two GPUs.'.format(len(rows), total, total / 2))
+    if missing:
+        print("Not shown (no '{}' columns logged): {}".format(
+            args.metric, ', '.join(missing)))
     if base is None and args.baseline:
         print('No run named "{}" found, so no speed-up column.'.format(
             args.baseline))

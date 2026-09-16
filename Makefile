@@ -30,7 +30,10 @@ SEED          ?= 12345
 BACKBONE      ?= vgg11
 LR            ?= 0.01
 BATCH_SIZE    ?= 32
-MOMENTUM      ?= 0.9
+# Appendix A: momentum 0.9 only "when using CCT and ResNet" -> plain SGD for
+# VGG11. With 0.9, FedAvg memorises its local data and its local-test accuracy
+# lands ~14 points above the paper. Set 0.9 if you switch BACKBONE to cct/resnet.
+MOMENTUM      ?= 0.0
 
 # Evaluate every N communication rounds. The repo default is 100 steps
 # (= 2 rounds at 50 local steps), which is the resolution the paper's
@@ -38,10 +41,13 @@ MOMENTUM      ?= 0.9
 # resolution for wall-clock.
 EVAL_EVERY    ?= 2
 
-# Evaluating the 10 training environments on top of the 10 test environments
-# roughly triples evaluation cost and is not reported in the paper.
-# 1 = only evaluate the held-out test environments.
-EVAL_TEST_ONLY ?= 1
+# Which splits to evaluate at each checkpoint (see train_fed.py --eval_envs).
+#   local         each training client's 20% held-out split -- the paper's
+#                 "local test datasets", what Table 1 reports. 10k images.
+#   local+global  + the in-split of each fixed-angle test environment (the
+#                 paper's Table 6 setting). 90k images. Default.
+#   all           every in/out split of every environment, as released. 150k.
+EVAL_ENVS     ?= local+global
 
 # Cap each evaluation loader at N samples. 0 = the full splits, which is what
 # the paper reports. Only used to make `make smoke` finish quickly.
@@ -60,12 +66,6 @@ STEPS      := $(shell echo $$(( $(ROUNDS) * $(LOCAL_STEPS) )))
 CKPT_FREQ  := $(shell echo $$(( $(EVAL_EVERY) * $(LOCAL_STEPS) )))
 
 BASE_HPARAMS = "backbone": "$(BACKBONE)", "lr": $(LR), "batch_size": $(BATCH_SIZE), "momentum": $(MOMENTUM)
-
-ifeq ($(EVAL_TEST_ONLY),1)
-EVAL_FLAG := --eval_test_only
-else
-EVAL_FLAG :=
-endif
 
 # Per-target overrides, set with target-specific variables below.
 HP    ?=
@@ -99,7 +99,7 @@ define run_fed
 	    --cache_dir $(CACHE_DIR) \
 	    --n_workers $(WORKERS) \
 	    --eval_subsample $(EVAL_SUBSAMPLE) \
-	    $(EVAL_FLAG) \
+	    --eval_envs $(EVAL_ENVS) \
 	    --hparams '{$(BASE_HPARAMS)$(HP)}' \
 	    $(EXTRA); \
 	fi
@@ -149,7 +149,7 @@ help:
 	@echo ""
 	@echo "Knobs  ROUNDS=$(ROUNDS) CLIENTS=$(CLIENTS) SEED=$(SEED) DEVICE=$(DEVICE)"
 	@echo "       BACKBONE=$(BACKBONE) EVAL_EVERY=$(EVAL_EVERY) OUT=$(OUT)"
-	@echo "       EVAL_TEST_ONLY=$(EVAL_TEST_ONLY)  ($(STEPS) steps, eval every $(CKPT_FREQ))"
+	@echo "       EVAL_ENVS=$(EVAL_ENVS) MOMENTUM=$(MOMENTUM)  ($(STEPS) steps, eval every $(CKPT_FREQ))"
 
 # ======================================================================== setup
 .PHONY: setup setup-vhl lock
@@ -272,10 +272,11 @@ table1: run-fedavg run-fedprox run-moon run-dann run-groupdro run-fedbr \
 
 # Two GPUs on one instance: `make data` once, then run these in two shells.
 # There is no DataParallel/DDP in train_fed.py, so one run uses one GPU; the
-# only way to use a second card is a second experiment. The lists are balanced
-# by the per-step costs in Table 7 (FedBR is ~2x FedAvg), not by run count.
-GPU0_RUNS ?= run-fedbr run-fedbr-mixup run-mixup
-GPU1_RUNS ?= run-fedavg run-fedprox run-moon run-dann run-groupdro run-fedmix
+# only way to use a second card is a second experiment. Balanced on measured
+# training cost (FedBR ~2.8x FedAvg on an RTX 3060) plus evaluation, which is
+# a fixed cost per run and so favours giving the FedBR side one extra run.
+GPU0_RUNS ?= run-fedbr run-fedbr-mixup run-mixup run-groupdro
+GPU1_RUNS ?= run-fedavg run-fedprox run-moon run-dann run-fedmix
 
 .PHONY: table1-gpu0 table1-gpu1
 table1-gpu0:

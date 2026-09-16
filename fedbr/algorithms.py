@@ -603,7 +603,7 @@ class Moon(ERM):
             self.projection_head.n_outputs,
             num_classes,
             self.hparams['nonlinear_classifier'])
-        self.optimizer = torch.optim.SGD(list(self.featurizer.parameters()) + list(self.projection_head.parameters()) + list(self.classifier.parameters()),lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'], momentum=0.9)
+        self.optimizer = torch.optim.SGD(list(self.featurizer.parameters()) + list(self.projection_head.parameters()) + list(self.classifier.parameters()),lr=self.hparams["lr"], weight_decay=self.hparams['weight_decay'], momentum=self.hparams.get('momentum', 0.9))
         self.register_buffer('update_count', torch.tensor([0]))
         self.previous_feature = copy.deepcopy(self.featurizer)
         self.global_feature = copy.deepcopy(self.featurizer)

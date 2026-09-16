@@ -34,8 +34,14 @@ def _hparams(algorithm, dataset, random_seed):
     _cifar10 = dataset in ('RotatedCIFAR10', 'CleanCIFAR10')
     _hparam('backbone', 'vgg11' if _cifar10 else 'cct',
             lambda r: 'vgg11' if _cifar10 else 'cct')
-    # SGD momentum of the local solver. Appendix A: 0.9 when using CCT/ResNet.
-    _hparam('momentum', 0.9, lambda r: 0.9)
+    # SGD momentum of the local solver. Appendix A: "When using CCT and
+    # ResNet, we set momentum as 0.9" -- so plain SGD for the VGG11 CIFAR10
+    # runs. The released ERM hardcoded 0.9 everywhere, which lets FedAvg
+    # memorise its local data (99.9% train accuracy) and inflates its local
+    # test accuracy to ~73% against the paper's 58.99. If you switch a CIFAR10
+    # run to BACKBONE=cct or a resnet, set momentum back to 0.9 yourself.
+    _hparam('momentum', 0.0 if _cifar10 else 0.9,
+            lambda r: 0.0 if _cifar10 else 0.9)
     _hparam('resnet_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
     _hparam('class_balanced', False, lambda r: False)
     # TODO: nonlinear classifiers disabled

@@ -10,9 +10,10 @@ one the paper's tables report:
     set, each rotated by one fixed angle. Balanced and covering every angle,
     i.e. a "balanced global test set" in the paper's Table 6 wording.
 
-`--eval_test_only` drops the first group from results.jsonl, so this script
-rebuilds the exact same splits from the cached dataset and scores a checkpoint
-on both. It reports the final-round model, not the top-5-rounds mean.
+Runs logged before `--eval_envs` existed (the old `--eval_test_only`) lack the
+first group in results.jsonl, so this script rebuilds the exact same splits
+from the cached dataset and scores a checkpoint on both. It reports the
+final-round model, not the top-5-rounds mean.
 
 Usage:
     python -m fedbr.scripts.eval_checkpoint output/cifar10/fedavg/model.pkl

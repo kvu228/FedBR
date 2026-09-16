@@ -24,7 +24,9 @@ def main():
     parser.add_argument('roots', nargs='+',
         help='Run directories, or a parent directory to scan recursively.')
     parser.add_argument('-o', '--output', default='figures/convergence.png')
-    parser.add_argument('--split', choices=['in', 'full'], default='in')
+    parser.add_argument('--metric', choices=['local', 'global'], default='local',
+        help="local = each training client's held-out split (the paper's "
+             "metric); global = the fixed-angle test environments.")
     parser.add_argument('--title', default='CIFAR10 convergence')
     parser.add_argument('--max_rounds', type=float, default=None)
     parser.add_argument('--smooth', type=int, default=1,
@@ -32,7 +34,8 @@ def main():
     args = parser.parse_args()
 
     runs = find_runs(args.roots)
-    rows = [r for r in (summarize_run(d, args.split, 5, []) for d in runs) if r]
+    rows = [r for r in (summarize_run(d, args.metric, 5, []) for d in runs)
+            if r and r['has_metric']]
     if not rows:
         print('No usable results.jsonl found.', file=sys.stderr)
         return 1

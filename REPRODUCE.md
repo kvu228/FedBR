@@ -160,11 +160,26 @@ From Appendix A of the paper, for CIFAR10:
 The `Makefile` encodes all of this. `ROUNDS × LOCAL_STEPS` is passed as
 `--steps`, so `make table1` runs 50 000 steps per algorithm.
 
-Reported metric (paper: "mean of maximum 5 test accuracies over rounds"):
-`fedbr/scripts/summarize.py` averages the top-5 rounds of the mean accuracy over
-the 10 held-out client environments, using the `in` split of each environment —
-the same convention as the repo's own `model_selection.py`. Pass
-`--split full` to reweight `in`+`out` back into the complete test set instead.
+**Reported metric** (paper: "mean of maximum 5 test accuracies over rounds",
+"mean accuracy on all local test datasets"): `summarize.py` averages the top-5
+rounds of the mean accuracy over each training client's **20% held-out split**
+— data with that client's own label skew and rotation mix. Two things pin this
+reading down: the paper's Table 6 reports the *same* FedAvg at 46.37 on
+"balanced global test datasets" against 58.99 in Table 1, so Table 1 is not a
+global-test number; and re-scoring finished checkpoints on both splits puts
+FedProx/FedBR within 1–2 points of Table 1 on the client held-out split and
+~18 points below it on the fixed-angle test environments.
+
+The fixed-angle test environments (ten copies of the CIFAR10 test set, one
+angle each — the Table 6 setting) are logged alongside and shown as the
+`Global (%)` column; `--metric global` makes them primary. Expect FedAvg ≈ 40
+there, not 59.
+
+The first pass of this reproduction used the fixed-angle environments as the
+metric and dropped the client held-out splits from the logs to save evaluation
+time; that is why runs made before commit `9550587` cannot be summarized on the
+paper's metric. `fedbr.scripts.eval_checkpoint` re-scores their `model.pkl`
+(final round only).
 
 ---
 
@@ -188,9 +203,10 @@ Useful knobs (all overridable on the command line):
 ```bash
 make table1 ROUNDS=200          # shorter runs while you sanity-check
 make run-fedbr DEVICE=1         # second GPU
-make run-fedbr MOMENTUM=0.0     # see §4 on the momentum question
+make run-fedbr MOMENTUM=0.9     # see §4 on the momentum question
 make run-fedbr EVAL_EVERY=10    # evaluate 5x less often
-make table1 EVAL_TEST_ONLY=0    # also evaluate the training environments
+make table1 EVAL_ENVS=local     # paper's metric only, cheapest evaluation
+make table1 EVAL_ENVS=all       # every split of every env, as released
 make run-fedbr BACKBONE=cct     # the backbone the released code hardcoded
 ```
 
@@ -232,11 +248,17 @@ Also worth knowing, for anyone comparing numbers closely:
   width 256 and output dimension 128. `FedBR.__init__` overrides the hparam to
   `2 × featurizer.n_outputs_feature` and sets the output dimension to
   `n_outputs_feature` — with VGG11 that is width 1024, output 512. The released
-  code is what runs here; change `FedBR.__init__` if you want the paper's shape.
-* **Momentum.** Appendix A says momentum 0.9 "when using CCT and ResNet",
-  implying plain SGD for the VGG11 CIFAR10 runs, but the released `ERM` hardcodes
-  `momentum=0.9` for every backbone. The default here follows the released code;
-  `MOMENTUM=0.0` follows the paper text.
+  code is what runs here. It does not appear to matter: with it, FedBR scores
+  65.9 on the client held-out split against the paper's 64.65.
+* **Momentum — this one changes the numbers.** Appendix A says momentum 0.9
+  "when using CCT and ResNet", i.e. plain SGD for the VGG11 CIFAR10 runs, but
+  the released `ERM` (and `Moon`) hardcode `momentum=0.9`. Run that way,
+  FedAvg reaches 99.9% accuracy on its *training* data and 72.9 on the client
+  held-out split — 14 points above Table 1's 58.99 — while FedProx and FedBR,
+  whose optimizers carry no momentum, land within 2 points of the paper. The
+  default is now `MOMENTUM=0.0` for CIFAR10, which is what the paper describes;
+  `Moon` reads the same hparam. Set `MOMENTUM=0.9` if you switch to a CCT or
+  ResNet backbone.
 * **Baseline hyperparameters were tuned over grids** (Appendix A: FedProx μ ∈
   {0.001, 0.01, 0.1}, DANN weight ∈ {0.01, 0.1, 1}, Moon ∈ {0.01, 0.1, 1, 10},
   FedMix λ ∈ {0.01, 0.1, 0.2}, FedNTD β ∈ {1.0, 0.1}). The paper does not say
@@ -304,8 +326,9 @@ A full 1000-round run is 50 000 steps, so roughly:
 | --- | --- |
 | FedAvg-like (ERM, Mixup, FedProx, GroupDRO) | ~4 h training |
 | FedBR, Moon, VHL | ~8 h training |
-| evaluation, `EVAL_TEST_ONLY=1`, `EVAL_EVERY=2` | ~1–2 h on top |
-| evaluation, `EVAL_TEST_ONLY=0` | ~3× the above |
+| evaluation, `EVAL_ENVS=local+global`, `EVAL_EVERY=2` | ~5 h on top (measured throughput; `EVAL_EVERY=5` → ~2 h) |
+| evaluation, `EVAL_ENVS=local` | ~10× cheaper — the paper's metric is only 10k images |
+| evaluation, `EVAL_ENVS=all` | ~1.7× `local+global` |
 
 `make table1` is nine such runs — on the order of two GPU-days on one card.
 Options if that is too much:
@@ -424,20 +447,26 @@ released behaviour except where noted.
 * `algorithms.py` — `FedBR`'s `mu`, `lambda`, `tau1`, `tau2`, `FedProx`'s `mu`
   and `FedMix`'s mixing weight read from hparams instead of being hardcoded.
   Defaults are the previously hardcoded values. Needed for Table 11.
-* `algorithms.py` — `ERM`'s SGD momentum reads `hparams['momentum']`,
-  default 0.9 as before.
+* `algorithms.py` — `ERM`'s and `Moon`'s SGD momentum read
+  `hparams['momentum']` instead of a hardcoded 0.9. `hparams_registry.py`
+  defaults it to 0.0 for CIFAR10 (Appendix A) and 0.9 elsewhere. See §4 for
+  why this is not cosmetic.
 * `scripts/train_fed.py` — FedBR's proxy dataset is now built only under
   `--use_Mixture`, which is the only branch that reads it. Previously every
   FedBR run downloaded and decoded the whole of CIFAR100 (for a CIFAR10 run)
   and then ignored it. Its path also honours `--data_dir` now instead of the
   hardcoded `./fedbr/data/CIFAR10`. `make data` still fetches CIFAR100 so that
   `--use_Mixture` works offline.
-* `scripts/train_fed.py` — `--cache_dir`, `--eval_test_only`,
-  `--eval_subsample`, `--n_workers`. The last one matters in containers: the
-  repo default of 8 workers × ~30 loaders exhausts `/dev/shm`, and since every
-  environment is an in-memory `TensorDataset`, `--n_workers 0` is both safe and
-  usually faster. `--eval_subsample` only exists to make `make smoke` fast and
-  defaults to off.
+* `scripts/train_fed.py` — `--cache_dir`, `--eval_envs`, `--eval_subsample`,
+  `--n_workers`. `--eval_envs` chooses which splits each checkpoint evaluates
+  (`local` = the paper's metric, 10k images; `local+global`, the default, adds
+  the fixed-angle test environments; `all` = every split, as released).
+  `--n_workers` matters in containers: the repo default of 8 workers × ~30
+  loaders exhausts `/dev/shm`, and since every environment is an in-memory
+  `TensorDataset`, `--n_workers 0` is both safe and usually faster.
+  `--eval_subsample` only exists to make `make smoke` fast and defaults to off.
+* `scripts/eval_checkpoint.py` — re-scores a saved `model.pkl` on all four
+  env/split groups; how the metric question in §2 was settled.
 * `datasets.py` — added `CleanCIFAR10` for Appendix A's unrotated CIFAR10
   (Table 9). `RotatedCIFAR10` cannot express it, because it treats angle `0` as
   "sample a random angle per image".
