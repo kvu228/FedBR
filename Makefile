@@ -312,10 +312,16 @@ table8-errorbar:
 	done
 
 # Table 9: CIFAR10 without the per-client rotation, on a group-norm ResNet18.
+# The paper sets momentum 0.9 for ResNet18 (Appendix C, Table 9), overriding
+# the CIFAR10/VGG11 default of 0.0. This target is sequential on one GPU; to
+# use two cards, run the per-run targets in two shells with the same
+# overrides (command-line variables propagate to the sub-makes):
+#   make table1-gpu0 GPU0_RUNS=run-fedbr DATASET=CleanCIFAR10 BACKBONE=resnet18_gn MOMENTUM=0.9 OUT=./output/cifar10-resnet
+#   make table1-gpu1 GPU1_RUNS="run-fedavg run-fedprox run-moon" DATASET=CleanCIFAR10 BACKBONE=resnet18_gn MOMENTUM=0.9 OUT=./output/cifar10-resnet
 .PHONY: table9-resnet
 table9-resnet:
 	@for t in run-fedavg run-fedprox run-moon run-fedbr; do \
-	  $(MAKE) $$t DATASET=CleanCIFAR10 BACKBONE=resnet18_gn \
+	  $(MAKE) $$t DATASET=CleanCIFAR10 BACKBONE=resnet18_gn MOMENTUM=0.9 \
 	              OUT=$(OUT)-resnet || exit 1; \
 	done
 	@$(MAKE) summarize OUT=$(OUT)-resnet SUMMARIZE_ARGS="--threshold 40"
