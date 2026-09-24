@@ -85,3 +85,104 @@ Sau khi đoạn 5 của mục 3.4.2 bị xoá, Chương 3 không còn câu rào 
 Chỗ nào bài và mã lệch nhau thì viết theo bài ở Ch.3 và ghi độ lệch vào danh mục kiểm toán ở Ch.5. Hai độ lệch đã biết (IR#7): $\lambda$ = 0,1 trong bài và 1,0 trong mã; projection 256/128 trong bài và 1024/512 trong mã. **Không viết công thức theo trí nhớ.**
 
 **Lối viết:** theo §7.7 của dàn bài. Mục này dễ rơi vào khuôn *"FedBR không phải … mà là …"*; dùng tối đa một lần, cho IR#6.
+
+---
+
+# PHIÊN BẢN CHỈNH SỬA — 24/09/2026 · mục 3.5 (mới): FedBR
+
+> **Cách đọc.** Chỉ-append. Khối này là **thân mục 3.5 mới**, chép vào Word ngay trước mục *"Bộ phân lớp sinh so với phân biệt"*, mục này dịch thành 3.6. Các mục 3.1–3.4 và 3.6 sửa theo bảng ở khối `YÊU CẦU SỬA — 24/09/2026` phía trên.
+>
+> **Nguồn công thức: mã nguồn công bố của [11]**, theo yêu cầu của học viên, vì đó là bản mà thực nghiệm ở Chương 5 chạy. Đối chiếu từng công thức:
+>
+> | Công thức | Mã nguồn (kho `FedBR`) |
+> |---|---|
+> | (3.16) pseudo-data | `fedbr/scripts/train_fed.py:34–48` (`get_augmentation_mean_data`), gọi một lần trước vòng lặp ở `:420` |
+> | $\phi_g$ chụp đầu mỗi vòng | `fedbr/algorithms.py:1120–1124`; cờ bật lại sau bước tổng hợp ở `train_fed.py:488` |
+> | tầng chiếu $h$, chiều ẩn $2d$ | `algorithms.py:967–970` |
+> | (3.17) $\ell_{\text{con}}$, ghép cặp theo chỉ số $k$ | `algorithms.py:1146–1151`; hàm `sim` là cosine, `:1036–1037` |
+> | lượt tối đa hoá trên $h$ | `algorithms.py:1132–1143` (đặc trưng `detach`, dấu ngược, chỉ `disc_opt` bước) |
+> | (3.18) $L_{\text{bal}}$, $q = 1/C$ | `algorithms.py:1114, 1158` |
+> | (3.19) mục tiêu lượt tối thiểu hoá, $\mu = 0{,}5$, $\lambda = 1{,}0$, $\tau_1 = \tau_2 = 2$ | `algorithms.py:1091–1095, 1155–1170` |
+> | nhánh Mixture | `algorithms.py:1060–1074, 1117–1118` |
+> | nhánh Mixup | `algorithms.py:1076–1085, 1104–1107` |
+>
+> **Số phương trình (3.16)–(3.19)** tiếp nối (3.15) của FedMix trong Word. Nếu sửa chỗ hai phương trình cùng mang số (3.2) trong Word thì mọi số từ đó trở đi dịch lên một, kể cả bốn số này.
+>
+> **Tự kiểm §7.7:**
+> - không có dấu `—` chêm, không có cụm sáo;
+> - không có khuôn *"không phải … mà …"*;
+> - không có câu rào; câu về nguồn công thức là phát biểu phương pháp, không phải câu rào;
+> - IR#6: ghép cặp theo từng mẫu được nêu một lần, ở mục 3.5.3.
+
+## 3.5. FedBR: dùng mẫu trung bình để giảm thiên lệch học cục bộ
+
+Hai thuật toán ở mục 3.3 đưa mẫu trung bình đại diện vào mô hình qua đầu vào hoặc qua số hạng gradient. FedBR [11] dùng nó theo một lối khác: làm điểm tựa để chống trực tiếp các biểu hiện của thiên lệch học cục bộ nêu ở mục 3.4. Mục này mô tả phương pháp theo mã nguồn mà [11] công bố, vì đó là bản mà các thực nghiệm ở Chương 5 chạy; những chỗ mã nguồn khác mô tả trong bài báo được ghi ở phần kiểm toán của Chương 5.
+
+### 3.5.1. Pseudo-data
+
+Trước vòng truyền thông đầu tiên, FedBR dựng một tập pseudo-data gồm $P$ mẫu. Mỗi mẫu được tạo bằng cách chọn ngẫu nhiên một client, rút ngẫu nhiên có hoàn lại $M$ ảnh trong dữ liệu của client đó, rồi lấy trung bình:
+
+$$u_p = \frac{1}{M}\sum_{m=1}^{M} x_{p,m}, \qquad p = 1, \ldots, P. \tag{3.16}$$
+
+Trong mã nguồn, $P$ bằng kích thước lô cục bộ $B = 32$ và $M = 10$. Tập $\{u_p\}$ được dựng một lần, rồi dùng chung cho mọi client ở mọi bước huấn luyện.
+
+So với (3.11), $u_p$ chính là mẫu trung bình đại diện $\bar x_g$, chỉ thiếu nhãn mềm $\bar y_g$. FedBR không dùng nhãn của pseudo-data. Mỗi mẫu được gán nhãn đều $q = \frac{1}{C}\mathbf{1}$, tức mô hình được yêu cầu không nghiêng về lớp nào khi nhìn một ảnh trung bình. Như vậy NaiveMix, FedMix và FedBR nhận cùng một loại dữ liệu từ các client khác, và chỉ khác nhau ở cách dữ liệu ấy đi vào hàm mất mát cục bộ. Chương 4 dựng khung thực nghiệm trên đúng nhận xét này.
+
+Mã nguồn còn một nhánh gọi là Mixture: mỗi pseudo-sample được trộn đều với một ảnh cục bộ $x_j$ chọn ngẫu nhiên, và nhãn đi kèm là $\frac{1}{2}\big(\frac{1}{C}\mathbf{1} + y_j\big)$. Luận văn không dùng nhánh này.
+
+### 3.5.2. Ký hiệu
+
+Giữ ký hiệu của mục 3.1: $\phi$ là bộ trích xuất đặc trưng và $\omega$ là bộ phân lớp của client đang huấn luyện. Ký hiệu thêm:
+- $\phi_g$: bản sao của bộ trích xuất toàn cục mà client nhận ở đầu vòng truyền thông hiện tại. Bản sao này không được cập nhật trong suốt vòng.
+- $h$: một **tầng chiếu**, là mạng MLP ánh xạ $\mathbb{R}^d \to \mathbb{R}^d$ với chiều ẩn $2d$.
+- $s(\cdot,\cdot)$: độ tương tự cosine.
+
+Ở mỗi bước cục bộ, client có một lô $\{(x_k, y_k)\}_{k=1}^{B}$ và tập pseudo-data $\{u_k\}_{k=1}^{B}$ cùng kích thước. Mẫu thứ $k$ của hai tập được ghép với nhau theo chỉ số. Với mỗi $k$, đặt
+
+$$a_k = h\big(\phi(u_k)\big), \qquad b_k = h\big(\phi_g(u_k)\big), \qquad c_k = h\big(\phi(x_k)\big).$$
+
+Ba vector này lần lượt là hình chiếu của: đặc trưng cục bộ của pseudo-sample, đặc trưng toàn cục của cùng pseudo-sample đó, và đặc trưng cục bộ của một ảnh thật.
+
+### 3.5.3. Thành phần tương phản
+
+FedBR định nghĩa cho mỗi $k$ một hàm mất mát tương phản với một cặp dương và một cặp âm:
+
+$$\ell_{\text{con}}(k) = -\log \frac{\exp\big(\tau_1\, s(a_k, b_k)\big)}{\exp\big(\tau_1\, s(a_k, b_k)\big) + \exp\big(\tau_2\, s(a_k, c_k)\big)}, \tag{3.17}$$
+
+trong đó $\tau_1$ và $\tau_2$ là hai hệ số nhiệt độ. Cặp dương gồm đặc trưng cục bộ và đặc trưng toàn cục của **cùng một** pseudo-sample. Cặp âm gồm đặc trưng cục bộ của pseudo-sample và đặc trưng cục bộ của một ảnh thật. $\ell_{\text{con}}(k)$ nhỏ khi bộ trích xuất cục bộ nhìn pseudo-sample giống như bộ trích xuất toàn cục nhìn nó, đồng thời khác với cách nó nhìn dữ liệu của chính client.
+
+Phép ghép cặp diễn ra theo từng mẫu, trên cùng một đầu vào đi qua hai bộ trích xuất. Ràng buộc này chặt hơn một phép căn chỉnh phân phối biên: căn chỉnh biên chỉ đòi hai tập đặc trưng có cùng thống kê tổng, còn (3.17) đòi từng đặc trưng cục bộ gần đúng đặc trưng toàn cục của cùng mẫu.
+
+Thành phần này được tối ưu theo lối min-max, với hai lượt cập nhật trong mỗi bước cục bộ.
+
+**Lượt tối đa hoá** chỉ cập nhật tầng chiếu $h$. Đặc trưng $\phi(u_k)$ và $\phi(x_k)$ được tách khỏi đồ thị tính gradient, và $h$ được cập nhật để **tăng** trung bình $\frac{1}{B}\sum_k \ell_{\text{con}}(k)$. Tầng chiếu vì vậy học cách làm nổi bật chỗ khác nhau giữa đặc trưng cục bộ và đặc trưng toàn cục của pseudo-data, tức tìm những hướng mà bộ trích xuất cục bộ đã trôi xa nhất.
+
+**Lượt tối thiểu hoá** giữ $h$ cố định và cập nhật $\phi$, $\omega$ theo mục tiêu ở mục 3.5.5. Trong lượt này $\phi$ phải kéo đặc trưng cục bộ của pseudo-data về gần đặc trưng toàn cục, dọc theo đúng những hướng mà $h$ vừa làm nổi bật.
+
+### 3.5.4. Thành phần cân bằng tầng phân lớp
+
+Thành phần thứ hai nhìn vào đầu ra của tầng phân lớp trên pseudo-data:
+
+$$L_{\text{bal}} = -\frac{1}{B}\sum_{k=1}^{B}\sum_{c=1}^{C} q_c \log \mathrm{softmax}\big(\omega(\phi(u_k))\big)_c, \qquad q_c = \frac{1}{C}. \tag{3.18}$$
+
+$L_{\text{bal}}$ là cross-entropy giữa phân phối dự đoán trên một pseudo-sample và phân phối đều. Các pseudo-sample được rút từ những client chọn ngẫu nhiên, nên xét trên cả tập, pseudo-data không nghiêng về các lớp chiếm đa số của riêng client đang huấn luyện. Một tầng phân lớp đã nghiêng về các lớp chiếm đa số tại chỗ sẽ gán cho các ảnh trung bình này xác suất cao ở chính những lớp đó, và $L_{\text{bal}}$ phạt đúng xu hướng ấy.
+
+### 3.5.5. Mục tiêu cục bộ
+
+Lượt tối thiểu hoá cập nhật $\phi$ và $\omega$ theo
+
+$$L_{\text{FedBR}} = \underbrace{-\frac{1}{B}\sum_{k=1}^{B}\sum_{c=1}^{C} y_{k,c}\,\log \mathrm{softmax}\big(\omega(\phi(x_k))\big)_c}_{\text{cross-entropy trên dữ liệu cục bộ}} \;+\; \mu\,\frac{1}{B}\sum_{k=1}^{B}\ell_{\text{con}}(k) \;+\; \lambda\,L_{\text{bal}}, \tag{3.19}$$
+
+với $y_k$ ở dạng one-hot. Mã nguồn đặt $\mu = 0{,}5$, $\lambda = 1{,}0$ và $\tau_1 = \tau_2 = 2{,}0$.
+
+Hai thành phần nhắm vào các biểu hiện khác nhau của thiên lệch học cục bộ ở mục 3.4.1. $L_{\text{bal}}$ tác động lên đầu ra của tầng phân lớp, tức biểu hiện thứ nhất. $\ell_{\text{con}}$ tác động lên không gian đặc trưng: nó kéo đặc trưng cục bộ về gần đặc trưng toàn cục (biểu hiện thứ hai) và giữ khoảng cách giữa pseudo-data với dữ liệu cục bộ (biểu hiện thứ ba).
+
+Mã nguồn còn cho phép thay lô cục bộ bằng các ảnh cục bộ được trộn theo Mixup, với trọng số trộn rút từ phân phối $\mathrm{Beta}(0{,}2;\ 0{,}2)$ và nhãn trộn theo cùng tỉ lệ. Biến thể này, gọi là FedBR + Mixup, chỉ đổi số hạng cross-entropy trong (3.19); cách FedBR dùng pseudo-data giữ nguyên.
+
+### 3.5.6. So với FedMix trên cùng một loại dữ liệu
+
+Đặt (3.19) cạnh (3.15) thì thấy hai phương pháp lấy thông tin từ mẫu trung bình ở hai chỗ khác nhau của mô hình.
+- **FedMix** dùng cả ảnh trung bình lẫn nhãn mềm. Ảnh đi vào qua tích vô hướng với gradient của hàm mất mát theo đầu vào; nhãn đi vào qua số hạng (II).
+- **FedBR** bỏ nhãn. Ảnh trung bình đi vào qua đầu ra của tầng phân lớp, với đích là phân phối đều, và qua không gian đặc trưng, với đích là đặc trưng toàn cục của chính nó.
+
+Theo hai giả thuyết ở mục 3.4.2, nếu thiên lệch của tầng phân lớp nằm ở hướng của ranh giới quyết định, thì phương pháp nào tác động được lên hướng đó mới có cơ hội cải thiện. Mục này không đánh giá phương pháp nào tốt hơn. Chương 4 đặt ba cách dùng vào cùng một khung, và Chương 5 so sánh chúng bằng thực nghiệm.

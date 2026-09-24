@@ -55,3 +55,11 @@ Thứ ba, kiểm toán tính tái lập trên cả hai nền tảng: đo lại F
 ⚠️ **Hai việc trong Word Ch.1, ghi lại để không rơi:**
 - **Câu mở mục 1.3.** Câu *"Luận văn có ba đóng góp; mọi phát biểu về tính mới dưới đây chỉ có hiệu lực trong phạm vi khảo sát mà Chương 2 mô tả."* giữ nguyên.
 - **Mục 1.2.2.** Word mục 1.2.2 đã được thay toàn bộ ở hàng 4–5, nên việc cũ *"rút bốn thành phần về ba"* (22/09) tự đóng.
+
+---
+
+# BỔ SUNG — 24/09/2026 (lượt 2) · sửa hàng 5
+
+> Chỉ-append. Phát hiện khi viết Chương 4 mục 4.2.4: trong mã FedBR, NaiveMix và FedMix nhận 32 mẫu trung bình mới ở mỗi bước, còn FedBR dùng 32 pseudo-sample cố định, và FedBR có thêm tầng chiếu cùng bộ siêu tham số riêng. Câu cuối ở cột **Sau** của hàng 5 (*"Vì loại thông tin được chia sẻ là như nhau, chênh lệch hiệu năng đo được giữa chúng quy được cho cách dùng."*) vì vậy nói quá. **Dùng bản dưới thay cho cột Sau của hàng 5.**
+
+Ba cách dùng nhận cùng một loại mẫu trung bình, mỗi mẫu là trung bình của một nhóm ảnh cục bộ, và khác nhau ở cách mẫu trung bình đi vào mục tiêu huấn luyện.
