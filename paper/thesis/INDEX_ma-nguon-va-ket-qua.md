@@ -10,11 +10,11 @@
 
 | Ký hiệu | Đường dẫn | Commit đã đọc | Nội dung | Dùng cho |
 |---|---|---|---|---|
-| `[FL]` | `C:\Users\KietVu\Testplace\uit-msc-dp-adaptive-fedmix` | `ccbc42a` | Stack Flower của Bài 1 (bài hội nghị): FedAvg, FedMix, CCVR, các head LDA/Newton, cổng bậc hai; bản port FedBR lên Flower; bản chép lại FedBR `src/fedbr_repro/` | Ch.3 (kết quả nền), Ch.4 (định cỡ $s$), IR#9 |
+| `[FL]` | `C:\Users\KietVu\Testplace\uit-msc-dp-adaptive-fedmix` | `ccbc42a` | Stack Flower của Bài 1 (bài hội nghị): FedAvg, FedMix, CCVR, các head LDA/Newton, cổng bậc hai; bản port FedBR lên Flower; bản chép lại FedBR `src/fedbr_repro/` | Ch.5 mục 5.2 (thực nghiệm dưới lệch nhãn trên nền tảng Flower; từ 24/09 là kết quả của luận văn), Ch.4 (định cỡ $s$) |
 | `[FL]/runs` | `…\uit-msc-dp-adaptive-fedmix\runs` | *(không trong git)* | Kết quả thô của Bài 1 và các cổng | truy vết số liệu Ch.3 |
 | `[FL]/paper/conference` | `…\uit-msc-dp-adaptive-fedmix\paper\conference` | *(không trong git)* | `main.tex`, `refs.bib`, `figures/`, `response/`, `reviews/`; `Calibration-reproduce.pdf` là bản **trước phản biện** | trích dẫn Bài 1 |
 | `[BR]` | `C:\Users\KietVu\Testplace\FedBR` | `4cf6409` | Mã LINs-lab/FedBR (DomainBed) đã vá; nền tảng thực nghiệm của Ch.5 | Ch.4, Ch.5 |
-| `[BR]/output` | `C:\Users\KietVu\Testplace\FedBR\output\cifar10` | *(không trong git)* | Kết quả chạy `[BR]`: `01_attempt_20260916`, `02_attempt_20260916` | Ch.5 §5.2 (tái hiện) |
+| `[BR]/output` | `C:\Users\KietVu\Testplace\FedBR\output\cifar10` | *(không trong git)* | Kết quả chạy `[BR]`: `01_attempt_20260916`, `02_attempt_20260916` | Ch.5 mục 5.3.1 (tái hiện), 5.4 (chi phí) |
 | `[DP]` | `C:\Users\KietVu\Testplace\fedmix\fedmix` | `771e725` (git@github.com:DevPranjal/fedmix) | Bản cài đặt FedMix mã mở mà `[FL]` hiệu chỉnh theo | đối chiếu cài đặt |
 
 **Tra cứu trong `[FL]`.** Từ 24/09, `runs/` và `paper/` đã được bỏ khỏi `.gitignore` (chỉ trên máy, học viên không commit), nên công cụ Grep tìm được bình thường trong cả hai, kể cả `runs/runs/`. Hai thư mục này **không có trong git**: `git ls-files` và `git log` không thấy chúng, nên lấy chúng từ ổ đĩa chứ đừng tra qua git. `storage/` (dữ liệu CIFAR, CINIC) vẫn bị ignore và không cần tìm trong đó. Nếu sau này `.gitignore` được khôi phục, Grep sẽ lại bỏ qua hai thư mục này; lúc đó dùng `grep -rn` qua Bash. Tài liệu định hướng của `[FL]` nằm ở `CLAUDE.md` và `docs/NEXT_STEPS.md` §0. Chúng ghi hướng "FedMix → FedBR trên Flower" từ 07/09. Hướng hiện hành của luận văn là dàn bài `00_outline.md`, **không phải** hai tệp đó.
