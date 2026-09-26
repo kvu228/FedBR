@@ -139,6 +139,8 @@ help:
 	@echo "Single runs   run-local run-fedavg run-fedprox run-moon run-dann"
 	@echo "              run-groupdro run-fedbr run-mixup run-fedmix"
 	@echo "              run-fedbr-mixup run-fedntd run-feddecorr run-fedcm"
+	@echo "              run-fedbr-taylor [LABEL=soft|uniform] [TAYLOR=1|0]"
+	@echo "  t2                 the four FedBR+Taylor configurations (thesis)"
 	@echo ""
 	@echo "Reporting"
 	@echo "  summarize          accuracy / rounds-to-threshold table (+ CSV)"
@@ -204,8 +206,8 @@ smoke:
 # ========================================================================= runs
 # Table 1 uses FedAvg as the backbone for every algorithm.
 .PHONY: run-local run-fedavg run-fedprox run-moon run-dann run-groupdro \
-        run-fedbr run-mixup run-fedmix run-fedbr-mixup run-fedntd \
-        run-feddecorr run-fedcm run-vhl
+        run-fedbr run-mixup run-fedmix run-fedbr-mixup run-fedbr-taylor \
+        run-fedntd run-feddecorr run-fedcm run-vhl
 
 # No-communication reference: only aggregate at step 0.
 run-local: EXTRA = --local_steps $(STEPS)
@@ -247,6 +249,25 @@ run-fedmix:
 run-fedbr-mixup: EXTRA = --use_Mixup
 run-fedbr-mixup:
 	$(call run_fed,fedbr-mixup,FedBR)
+
+# FedBR + Taylor (thesis, direction A): FedBR's objective plus the soft-label
+# term and the first-order Taylor term of FedMix, on FedBR's fixed pseudo-data.
+#   LABEL=soft|uniform   label of the pseudo-data in the soft-label term
+#   TAYLOR=1|0           1 includes term (III); 0 is the no-Taylor control
+# Output name: fedbr-taylor-<LABEL>[-noiii]. `make t2` runs all four.
+LABEL  ?= soft
+TAYLOR ?= 1
+FEDBRT_NAME := fedbr-taylor-$(LABEL)$(if $(filter 0,$(TAYLOR)),-noiii,)
+run-fedbr-taylor: HP = , "fedbrt_lambda": 0.1, "fedbrt_taylor": $(TAYLOR), "fedbrt_label": "$(LABEL)"
+run-fedbr-taylor:
+	$(call run_fed,$(FEDBRT_NAME),FedBRTaylor)
+
+.PHONY: t2
+t2:
+	@for l in soft uniform; do for t in 1 0; do \
+	  $(MAKE) run-fedbr-taylor LABEL=$$l TAYLOR=$$t || exit 1; \
+	done; done
+	@$(MAKE) summarize
 
 run-fedntd:
 	$(call run_fed,fedntd,FedNTD)

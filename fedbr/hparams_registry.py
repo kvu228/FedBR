@@ -51,7 +51,7 @@ def _hparams(algorithm, dataset, random_seed):
     # Algorithm-specific hparam definitions. Each block of code below
     # corresponds to exactly one algorithm.
 
-    if algorithm in ['DANN', 'CDANN', 'FedBR', 'FedBR_GroupDRO', 'FedBR_DANN', 'FedBR_DCDANN', 'FedBR_DCDANN_Lite', 'AugCA', 'Moon', 'AugCA_O', 'FedBR_Moon', 'FedBR_AugCA', 'FedBR_AugCA_Self']:
+    if algorithm in ['DANN', 'CDANN', 'FedBR', 'FedBRTaylor', 'FedBR_GroupDRO', 'FedBR_DANN', 'FedBR_DCDANN', 'FedBR_DCDANN_Lite', 'AugCA', 'Moon', 'AugCA_O', 'FedBR_Moon', 'FedBR_AugCA', 'FedBR_AugCA_Self']:
         _hparam('lambda', 0.01, lambda r: 10**r.uniform(-2, 2))
         _hparam('weight_decay_d', 0., lambda r: 10**r.uniform(-6, -2))
         _hparam('d_steps_per_g_step', 1, lambda r: int(2**r.uniform(0, 3)))
@@ -90,6 +90,12 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('fedbr_lambda', 1.0, lambda r: 1.0)
         _hparam('fedbr_tau1', 2.0, lambda r: 2.0)
         _hparam('fedbr_tau2', 2.0, lambda r: 2.0)
+
+    if algorithm == 'FedBRTaylor':
+        # FedBR + the soft-label and Taylor terms of FedMix (thesis direction A).
+        _hparam('fedbrt_lambda', 0.1, lambda r: 0.1)      # lam of (3.15); 0 = FedBR
+        _hparam('fedbrt_taylor', 1, lambda r: 1)          # 0 = no-Taylor control
+        _hparam('fedbrt_label', 'soft', lambda r: 'soft') # 'soft' | 'uniform'
 
     if algorithm == "GroupDRO" or algorithm == "FedBR_GroupDRO":
         _hparam('groupdro_eta', 1e-2, lambda r: 10**r.uniform(-3, -1))

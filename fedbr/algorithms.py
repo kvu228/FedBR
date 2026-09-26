@@ -53,6 +53,7 @@ ALGORITHMS = [
     'CAD',
     'CondCAD',
     'FedBR',
+    'FedBRTaylor',
     'FedMix',
     'NaiveMix',
     'Moon',
@@ -1170,6 +1171,127 @@ class FedBR(Algorithm):
         self.gen_opt.step()
         # self.gen_opt.step(self.Delta_gen)
         return {'loss': classifier_loss.item(), 'penalty':disc_loss.item()}
+
+
+class FedBRTaylor(FedBR):
+    """FedBR plus the two mean-sample terms of FedMix (thesis, direction A).
+
+    Local objective, with the local batch (x_k, y_k) paired by index with
+    FedBR's fixed pseudo-data u_k and its soft label t_k:
+
+        CE(f(x_k), y_k) + mu * l_con + gamma * L_bal          (FedBR, unchanged)
+        + lam * CE(f(x_k), t_k)                                 (term II of 3.15)
+        + lam (1 - lam) * mean_k < grad_x CE(f(x_k), y_k), u_k >   (term III)
+
+    Unlike FedMix, the local images are not scaled by (1 - lam) and FedBR's
+    cross-entropy keeps weight 1; the two extra terms are added as
+    regularisers with FedMix's coefficients. Term (III) uses the batch
+    normalisation of the formula: the gradient of the batch-mean
+    cross-entropy already carries 1/B, so the sum over the batch is not
+    divided by B again (the released FedMix does, INDEX F1).
+
+    hparams:
+        fedbrt_lambda  lam above (0 recovers FedBR exactly)
+        fedbrt_taylor  1 to include term (III), 0 for the no-Taylor control
+        fedbrt_label   'soft': t_k is the label histogram of the images
+                       averaged into u_k; 'uniform': t_k = 1/C
+    `unlabeled` is a list of (image, soft_label) pairs, as
+    train_fed.get_augmentation_fedmix_data builds them once before training.
+    The Mixup and Mixture variants of FedBR are not supported.
+    """
+
+    @staticmethod
+    def _taylor_from_loss(ce_mean, x, u, lam):
+        # d(mean_k CE_k)/dx has rows (1/B) grad CE_k, so the plain sum over
+        # the batch is already the batch mean of <grad CE_k, u_k>.
+        grad = autograd.grad(ce_mean, x, create_graph=True)[0]
+        return lam * (1 - lam) * torch.sum(grad * u)
+
+    def taylor_term(self, x, y, u, lam):
+        """Term (III) for a batch: lam (1-lam) mean_k <grad_x CE(f(x_k), y_k), u_k>.
+        `y` holds class indices. Runs its own forward pass; `update` shares
+        the forward pass instead."""
+        x = x.clone().requires_grad_()
+        ce = F.cross_entropy(self.predict(x), y)
+        return self._taylor_from_loss(ce, x, u, lam)
+
+    def update(self, minibatches, unlabeled=None):
+        if self.hparams.get('use_Mixup'):
+            raise NotImplementedError('FedBRTaylor does not support --use_Mixup')
+        if self.hparams.get('use_Mixture'):
+            raise NotImplementedError('FedBRTaylor does not support --use_Mixture')
+        label_mode = self.hparams.get('fedbrt_label', 'soft')
+        if label_mode not in ('soft', 'uniform'):
+            raise ValueError("fedbrt_label must be 'soft' or 'uniform', got %r"
+                             % (label_mode,))
+
+        device = minibatches[0][0].device
+        mu = self.hparams.get('fedbr_mu', 0.5)
+        gamma = self.hparams.get('fedbr_lambda', 1.0)   # weight of L_bal
+        tau1 = self.hparams.get('fedbr_tau1', 2.0)
+        tau2 = self.hparams.get('fedbr_tau2', 2.0)
+        lam = self.hparams.get('fedbrt_lambda', 0.1)
+        use_taylor = bool(self.hparams.get('fedbrt_taylor', 1))
+        self.update_count += 1
+
+        all_x = torch.cat([x for x, y in minibatches]).requires_grad_()
+        all_y = torch.cat([y for x, y in minibatches])
+        all_y = F.one_hot(all_y, self.num_classes).to(all_x.device)
+        all_unlabeled = torch.cat([x for x, _ in unlabeled]).to(device)
+        if label_mode == 'soft':
+            soft_y = torch.stack([t for _, t in unlabeled]).to(all_x.device)
+        else:
+            soft_y = torch.ones((len(all_unlabeled), self.num_classes)).to(all_x.device) / self.num_classes
+
+        # FedBR: uniform target for L_bal, global features snapshot per round.
+        q = torch.ones((len(all_y), self.num_classes)).to(all_x.device) / self.num_classes
+        if self.if_updated:
+            self.original_feature = copy.deepcopy(self.featurizer)
+            self.original_classifier = copy.deepcopy(self.classifier)
+            self.all_global_unlabeled_z = self.original_feature(all_unlabeled).clone().detach()
+            self.if_updated = False
+
+        all_unlabeled_z = self.featurizer(all_unlabeled)
+        all_self_z = self.featurizer(all_x)
+
+        # FedBR max step on the projection head, features detached.
+        embedding1 = self.discriminator(all_unlabeled_z.clone().detach())
+        embedding2 = self.discriminator(self.all_global_unlabeled_z)
+        embedding3 = self.discriminator(all_self_z.clone().detach())
+        disc_loss = torch.log(torch.exp(self.sim(embedding1, embedding2) * tau1) / (torch.exp(self.sim(embedding1, embedding2) * tau1) + torch.exp(self.sim(embedding1, embedding3) * tau2)))
+        disc_loss = torch.sum(disc_loss) / len(embedding1)
+        self.disc_opt.zero_grad()
+        disc_loss.backward()
+        self.disc_opt.step()
+
+        # FedBR min step.
+        embedding1 = self.discriminator(all_unlabeled_z)
+        embedding2 = self.discriminator(self.all_global_unlabeled_z)
+        embedding3 = self.discriminator(all_self_z)
+        disc_loss = - torch.log(torch.exp(self.sim(embedding1, embedding2) * tau1) / (torch.exp(self.sim(embedding1, embedding2) * tau1) + torch.exp(self.sim(embedding1, embedding3) * tau2)))
+        disc_loss = torch.sum(disc_loss) / len(embedding1)
+
+        all_preds = self.classifier(all_self_z)
+        log_p = F.log_softmax(all_preds, 1)
+        classifier_loss = - torch.mean(torch.sum(log_p * all_y, 1))
+        aug_penalty = - torch.mean(torch.sum(torch.mul(F.log_softmax(self.classifier(all_unlabeled_z), 1), q), 1))
+
+        # Added terms (II) and (III), on the same forward pass.
+        soft_label_loss = - torch.mean(torch.sum(log_p * soft_y, 1))
+        if use_taylor:
+            taylor_loss = self._taylor_from_loss(classifier_loss, all_x, all_unlabeled, lam)
+        else:
+            taylor_loss = torch.zeros((), device=all_x.device)
+
+        gen_loss = (classifier_loss + (mu * disc_loss) + gamma * aug_penalty
+                    + lam * soft_label_loss + taylor_loss)
+
+        self.disc_opt.zero_grad()
+        self.gen_opt.zero_grad()
+        gen_loss.backward()
+        self.gen_opt.step()
+        return {'loss': classifier_loss.item(), 'penalty': disc_loss.item(),
+                'soft_label': soft_label_loss.item(), 'taylor': taylor_loss.item()}
 
 
 

@@ -412,7 +412,16 @@ if __name__ == "__main__":
     last_results_keys = None
     uda_device = None
     train_losses = []
-    if args.algorithm.startswith('FedBR'):
+    if args.algorithm == 'FedBRTaylor':
+        if args.use_Mixture or args.use_Mixup:
+            raise NotImplementedError('FedBRTaylor does not support --use_Mixture / --use_Mixup')
+        # FedBR's pseudo-data (same draws as get_augmentation_mean_data, so the
+        # images are identical at equal seed), plus the label histogram of
+        # each averaged group. Built once, like FedBR's; FedMix rebuilds every step.
+        uda_device = get_augmentation_fedmix_data([ (env, env_weights)
+            for i, (env, env_weights) in enumerate(in_splits)
+            if i not in args.test_envs], device, hparams['batch_size'], class_num=dataset.num_classes)
+    elif args.algorithm.startswith('FedBR'):
         if args.use_Mixture:
             uda_device = get_augmentation_proxy_data(proxy_dataset, hparams['batch_size'])
         else:

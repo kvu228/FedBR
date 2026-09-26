@@ -44,7 +44,10 @@ Chạy `make probe` trên đúng GPU vừa thuê trước khi cam kết ngân s�
 | T1 | FedMix bản sửa chuẩn hoá (cần M1) | 12345, 23456, 34567 | ≈ 5,8 | ≈ 17 |
 | T1 | NaiveMix (cần M2) | 12345, 23456, 34567 | chưa đo; không có phép lấy đạo hàm kép nên dự kiến rẻ hơn FedMix | `[ĐO: make probe]` |
 | | **Cộng T1** | | | **≈ 17 + NaiveMix** |
-| T2 | FedBR + Taylor (cần M3) | 12345, 23456, 34567 | chưa đo; ít nhất bằng FedBR | `[ĐO: make probe]` |
+| T2 | FedBR + Taylor (`run-fedbr-taylor LABEL=soft TAYLOR=1`) | **12345 trước**; 23456, 34567 nếu còn thời gian | chưa đo; ước ≈ FedBR 7,5 + phần lan truyền ngược bậc hai của FedMix ≈ 3,5, tức ≈ 11 | `[ĐO: make probe]` |
+| T2 | FedBR + nhãn mềm, không (III) (`… LABEL=soft TAYLOR=0`) | như trên | ≈ FedBR | `[ĐO]` |
+| T2 | FedBR + Taylor, nhãn đều (`… LABEL=uniform TAYLOR=1`) | như trên | ≈ 11 | `[ĐO]` |
+| T2 | FedBR + nhãn đều, không (III) (`… LABEL=uniform TAYLOR=0`) | như trên | ≈ FedBR | `[ĐO]` |
 
 Với 2 GPU, T0 mất khoảng 26 giờ lịch và T1 khoảng 10–15 giờ lịch.
 
@@ -56,7 +59,7 @@ Không chạy lại Moon, DANN, GroupDRO, Mixup. Chúng chỉ có mặt trong b�
 |---|---|---|
 | M1 | Cờ chọn cách chuẩn hoá `loss3` ở `fedbr/algorithms.py:850`. Bản sửa: bỏ phép chia cho `len(all_augmentation_y)`, vì `grad` đã mang $1/B$. Mặc định giữ hành vi gốc để `run-fedmix` không đổi | T1 |
 | M2 | Target `run-naivemix` trong Makefile, theo mẫu `run-fedmix` | T1 |
-| M3 | Lớp `FedBRTaylor`: sao `FedBR`, giữ nhãn mềm của pseudo-data, cộng hai số hạng (II) và (III) của FedMix vào mục tiêu cục bộ. **Viết thiết kế vào Ch.4 trước, cài sau** | T2 |
+| M3 | ✅ **Xong 26/09.** Lớp `FedBRTaylor` (`fedbr/algorithms.py`, kế thừa `FedBR`), hparam `fedbrt_lambda` 0,1 · `fedbrt_taylor` 1/0 · `fedbrt_label` soft/uniform; pseudo-data dựng một lần bằng `get_augmentation_fedmix_data` (trùng ảnh với FedBR ở cùng hạt giống); target `run-fedbr-taylor` và `t2`; 13 test CPU ở `fedbr/test/test_fedbr_taylor.py`. Thiết kế chốt ở khối 26/09 cuối `04_chuong4.md`. Chưa commit | T2 |
 | M4 | *(thấp)* Sửa lỗi môi trường 0°, hoặc chấm lại các `model.pkl` bằng `eval_checkpoint.py`. Chỉ ảnh hưởng cột Global | — |
 
 Mỗi thay đổi có một test chứng minh bản gốc không đổi khi cờ tắt. Với M1, thêm test số học: tỉ lệ giữa hai cách chuẩn hoá phải đúng bằng $B$. Mẫu có sẵn ở `scratchpad/check_loss3.py` của phiên 24/09; chép vào `tests/` nếu cần giữ.
@@ -68,4 +71,5 @@ Mỗi thay đổi có một test chứng minh bản gốc không đổi khi cờ
 | Trước T0 | `make probe` chạy được trên GPU mới; đơn giá gần bảng §3 | tính lại ngân sách trước khi chạy |
 | Sau T0 | FedBR − FedAvg theo cặp có khoảng tin cậy loại trừ 0 không | Không sao, cả hai kết cục đều là kết quả. Nhưng nếu không loại trừ được 0 thì Ch.5 **không được** viết "FedBR cải thiện" (IR#2, IR#5) |
 | Sau T1 | FedMix bản sửa khác bản gốc bao nhiêu | Kết quả này đi vào kiểm toán (C3) và quyết định có nên làm T2 hay không: nếu số hạng Taylor ở đúng biên độ vẫn không mang tín hiệu thì A khó có lý do tồn tại |
-| Trước T2 | T0 và T1 đã xong, Ch.5 mục 5.3 đã có bản nháp | không chạy T2 |
+| Trước T2 | T0 và T1 đã xong, Ch.5 mục 5.3 đã có bản nháp. Mã M3 viết trước được, chỉ việc *chạy* phải chờ | không chạy T2 |
+| Trong T2 | Chạy theo thứ tự `soft/1 → soft/0 → uniform/1 → uniform/0` (đúng thứ tự của `make t2`); ngừng sớm nếu `soft/1` không hơn FedBR ở hạt giống 12345 | các cấu hình sau chỉ chạy khi cấu hình đầu cho tín hiệu |

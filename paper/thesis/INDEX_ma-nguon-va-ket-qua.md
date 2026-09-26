@@ -182,6 +182,7 @@ Vị trí mã chính đã có ở `00_outline.md` §3.1. Bổ sung:
 - `fedbr/scripts/train_fed.py:439–442`: gọi lại ở **mỗi bước**, từ `in_splits` thô của mọi client.
 - `fedbr/scripts/summarize.py:87–131`: chỉ số = trung bình top-$k$ vòng (`--top_k 5`); `--metric local` = tập giữ lại 20% của client (`env00..09_out`, chỉ số của bài FedBR); `--metric global` = 10 tập kiểm tra góc cố định (`env10..19_in`).
 - `fedbr/scripts/eval_checkpoint.py`: chấm lại `model.pkl` (vòng cuối) trên mọi env/split.
+- **Hướng A (26/09):** lớp `FedBRTaylor` ngay sau lớp `FedBR` trong `fedbr/algorithms.py` (kế thừa `FedBR`, ghi đè `update`; số hạng (III) ở `_taylor_from_loss`, chuẩn hoá theo công thức, không thừa $1/B$); hparam ở `fedbr/hparams_registry.py` khối `if algorithm == 'FedBRTaylor'`; pseudo-data có nhãn dựng một lần ở nhánh `if args.algorithm == 'FedBRTaylor'` trong `train_fed.py` (gọi `get_augmentation_fedmix_data`, cùng thứ tự rút ngẫu nhiên với `get_augmentation_mean_data` nên ảnh trùng với FedBR ở cùng hạt giống); test `fedbr/test/test_fedbr_taylor.py`; target `run-fedbr-taylor`, `t2` trong `Makefile`. Thư mục kết quả: `fedbr-taylor-<soft|uniform>[-noiii]`.
 - Bố cục thư mục kết quả: `REPRODUCE.md` §8.
 
 ### 5.2. `output/cifar10/` — kết quả

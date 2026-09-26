@@ -195,6 +195,7 @@ paper's metric. `fedbr.scripts.eval_checkpoint` re-scores their `model.pkl`
 | `make table8-errorbar` | Table 8 | 3 seeds × 5 algorithms |
 | `make table9-resnet` | Table 9 | clean (unrotated) CIFAR10 on a GN ResNet18 |
 | `make table11-tau` | Table 11 | FedBR τ₂ ∈ {0, 0.5, 1, 2} at τ₁ = 2 |
+| `make t2` / `make run-fedbr-taylor` | — (thesis, direction A) | `FedBRTaylor`: FedBR + the soft-label and Taylor terms of FedMix; `LABEL=soft\|uniform`, `TAYLOR=1\|0` |
 | `make summarize` | — | accuracy + rounds-to-threshold table, also written to `summary.csv` |
 | `make figures` | Figure 5(a) / 9(b) | convergence curves |
 
@@ -470,6 +471,27 @@ released behaviour except where noted.
 * `datasets.py` — added `CleanCIFAR10` for Appendix A's unrotated CIFAR10
   (Table 9). `RotatedCIFAR10` cannot express it, because it treats angle `0` as
   "sample a random angle per image".
+
+**New algorithm (thesis, not part of the paper)**
+
+* `algorithms.py` — `FedBRTaylor`, a subclass of `FedBR` with its own
+  `update`. Local objective: FedBR's three terms unchanged, plus
+  `lam * CE(f(x_k), t_k)` (term II of FedMix, `t_k` the label histogram of the
+  pseudo-sample or `1/C`) and `lam (1-lam) * mean_k <grad_x CE(f(x_k), y_k), u_k>`
+  (term III). The Taylor term keeps the normalisation of the formula: the
+  gradient of the batch-mean cross-entropy already carries `1/B`, so the sum
+  is not divided by `B` again as the released `FedMix.update` does. Local
+  images are not scaled by `(1-lam)`. `lam = 0` reproduces `FedBR` exactly
+  (tested in float64). hparams `fedbrt_lambda` (0.1), `fedbrt_taylor` (1/0),
+  `fedbrt_label` (`soft`/`uniform`); `--use_Mixup` / `--use_Mixture` are
+  rejected. `FedBR`, `FedMix` and `NaiveMix` are untouched.
+* `scripts/train_fed.py` — for `FedBRTaylor` the pseudo-data is built once
+  with `get_augmentation_fedmix_data`, which draws the client and the ten
+  images in the same order as FedBR's `get_augmentation_mean_data`, so at
+  equal seed the images are identical to FedBR's and only the label
+  histogram is added.
+* `fedbr/test/test_fedbr_taylor.py` — CPU tests:
+  `uv run python -m unittest fedbr.test.test_fedbr_taylor`.
 
 **New files**
 

@@ -217,3 +217,36 @@ Phần tính toán thêm đã nêu ở hàng cuối Bảng 4.1. NaiveMix gần n
 | 1 | 4.4, đoạn ví dụ CIFAR-10 | `cấu hình pseudo-data của [11]` | Lấy cấu hình pseudo-data của [11]: | Lấy cấu hình pseudo-data của [2]: |
 
 Ràng buộc IR#11 ở khối trạng thái đầu file đọc là "đi kèm [2]".
+
+---
+
+# THIẾT KẾ HƯỚNG A — chốt 26/09/2026 · ngoài thân chương
+
+> Chỉ-append. Khối này **thay** ba câu hỏi thiết kế ở đầu file (khối "Ngoài thân chương — thiết kế hướng A"). Mã đã cài (M3, `PLAN_huong-B.md` §4); vị trí mã ở `INDEX_ma-nguon-va-ket-qua.md` §5.1. **Chưa đưa vào thân Ch.4 hay Ch.5** cho tới khi T2 có số liệu (dàn bài §1.1). Khi đưa vào, mục dự kiến là 4.5 (đề xuất) và 5.5 (kết quả).
+
+## Quyết định
+
+| Câu hỏi | Chốt | Lý do |
+|---|---|---|
+| **Dạng mục tiêu** | Giữ nguyên ba số hạng của FedBR (3.19), **cộng thêm** số hạng nhãn mềm (II) và số hạng Taylor (III) của (3.15) với đúng hệ số của FedMix. Không thay cross-entropy của FedBR bằng (I), không co ảnh cục bộ | `02_attempt` và Bảng 1 bài FedBR [2] đều cho FedMix dưới FedAvg khoảng 2 điểm, trong khi số hạng (III) ở đó gần bằng 0 (thu nhỏ 32 lần). Phần làm FedMix thua vì vậy nằm ở việc thay CE bằng (I)+(II) trên ảnh đã co; A không mang phần đó vào FedBR. Cái giá: A không còn là khai triển Taylor của một phép trộn duy nhất, mà là FedBR cộng hai số hạng điều chuẩn rút từ khai triển ấy. Thân bài phải viết đúng như vậy |
+| **Nhãn** cho (II) | Hai cấu hình: `soft` (histogram nhãn của nhóm ảnh tạo pseudo-sample, như FedMix) và `uniform` ($1/C$, không lộ nhãn; (II) khi đó là label smoothing với $\varepsilon = \lambda$). $L_{\text{bal}}$ luôn dùng $1/C$ | Học viên chọn chạy cả hai |
+| **Trọng số** | $\lambda = 0{,}1$; $\mu = 0{,}5$, $\gamma = 1{,}0$, $\tau_1 = \tau_2 = 2$ giữ của FedBR. Không quét | $\lambda$ như FedMix trong `02_attempt` và bài [2] |
+| **Đối chứng** | Cờ `fedbrt_taylor` 0/1: cấu hình không-(III) là FedBR cộng $\lambda\,(\text{II})$. Bốn cấu hình: {soft, uniform} × {có, không (III)}. Hạt giống 12345 trước; hai hạt giống còn lại nếu còn thời gian | Hiệu (có − không (III)) đo riêng số hạng Taylor; hiệu (không (III) − FedBR) đo riêng số hạng nhãn |
+| **Chuẩn hoá (III)** | Chỉ bản theo công thức: gradient của cross-entropy trung bình trên lô đã mang $1/B$, nên tổng trên lô không chia thêm. Không có cờ bản gốc | Học viên chọn; test số học xác nhận tỉ lệ với cách chia của FedMix đúng bằng $B$ |
+| **Pseudo-data** | Dựng **một lần** trước huấn luyện, cùng thủ tục rút với FedBR nên ảnh trùng từng byte ở cùng hạt giống; chỉ thêm histogram nhãn | Giữ phép so với FedBR trên cùng pseudo-data; có test chẵn lẻ |
+
+## Mục tiêu cục bộ của A
+
+Với lô cục bộ $\{(x_k, y_k)\}_{k=1}^B$ và pseudo-data $\{(u_k, t_k)\}_{k=1}^B$ ghép theo chỉ số như (3.17):
+
+$$L_A = L_{\text{FedBR}} \;+\; \lambda\,\Big[-\frac1B\sum_{k}\sum_{c} t_{k,c}\log\mathrm{softmax}\big(\omega(\phi(x_k))\big)_c\Big] \;+\; [\text{III}]\;\lambda(1{-}\lambda)\,\frac1B\sum_{k}\big\langle \nabla_x \ell\big(f(x_k), y_k\big),\, u_k\big\rangle$$
+
+với $L_{\text{FedBR}}$ là (3.19), $t_k = \bar y_k$ (cấu hình soft) hoặc $\frac1C\mathbf 1$ (uniform), $[\text{III}] \in \{0, 1\}$. Gradient theo đầu vào lấy tại $x_k$, không tại $(1{-}\lambda)x_k$. Với $\lambda = 0$, $L_A = L_{\text{FedBR}}$ (test trong float64).
+
+## Điều phải nói khi viết vào thân bài
+
+- (II) và $L_{\text{bal}}$ không mâu thuẫn: (II) đánh giá trên ảnh cục bộ $x_k$ với nhãn $t_k$; $L_{\text{bal}}$ đánh giá trên pseudo-sample $u_k$ với nhãn đều.
+- Cấu hình `soft` lộ histogram nhãn của 10 ảnh mỗi pseudo-sample, như FedMix; chi phí truyền thông theo (4.1) với $C_y = C$. Cấu hình `uniform` không lộ thêm gì so với FedBR.
+- Chi phí tính toán: thêm một lượt lan truyền ngược bậc hai như FedMix; ước ≈ 11 giờ mỗi 1000 vòng (đo lại bằng `make probe`).
+- Rủi ro đã biết: ở $B = 32$ số hạng (III) lớn gấp 32 lần bản FedMix đã chạy, và nó tuyến tính theo $u_k$ nên không bị chặn dưới. T1 (FedMix bản sửa) cho biết trước điều này có làm mất ổn định không.
+- Không hỗ trợ nhánh Mixture và biến thể Mixup của FedBR.
