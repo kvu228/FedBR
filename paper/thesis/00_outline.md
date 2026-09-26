@@ -108,7 +108,9 @@ Kế thừa từ dàn bài cũ (bản gốc ở `archive/…/00_outline.md` §2)
 
 **IR#10 — Không viết kết quả chưa chạy.** Mục nào chưa có dữ liệu thì để `[CHỜ SỐ LIỆU: <exp-id>]`. Cấm số minh hoạ, số ước lượng, số "dự kiến".
 
-**IR#11 — FedBR là phương pháp của Guo và cộng sự** (mới, 24/09). Luận văn **cài và đánh giá** FedBR như một cách dùng mẫu trung bình trong khung. Luận văn **không đề xuất** FedBR. Chương 4 trình bày khung và cách các phương pháp được đặt vào khung; mọi mô tả FedBR đi kèm trích dẫn [11].
+**IR#11 — FedBR là phương pháp của Guo và cộng sự** (mới, 24/09). Luận văn **cài và đánh giá** FedBR như một cách dùng mẫu trung bình trong khung. Luận văn **không đề xuất** FedBR. Chương 4 trình bày khung và cách các phương pháp được đặt vào khung; mọi mô tả FedBR đi kèm trích dẫn [2].
+
+**Số trích dẫn theo danh mục Word (kiểm 25/09):** [1] FedMix · [2] FedBR · [3] FedAvg · [4] NIID-Bench · [5] Hsu–Qi–Brown · [8] CCVR · [10] Mixup · [11] VHL · [16] Efron · [17] Ng–Jordan. Các bảng sửa trong md viết trước ngày này còn ghi FedBR là [11]; khi chép vào Word dùng số ở đây.
 
 **IR#12 — Phép chuẩn hoá số hạng Taylor phải được nêu mỗi lần báo kết quả FedMix** (mới, 24/09). Ghi rõ đó là bản cài đặt gốc (số hạng Taylor nhỏ hơn công thức $B$ lần) hay bản đã sửa. Kết quả FedMix ở mục 5.2 và ở `02_attempt` đều là **bản cài đặt gốc**.
 
@@ -196,21 +198,23 @@ Ch.3 **không chứa số đo của luận văn**; mọi số đo nằm ở Ch.5
 
 ### CHƯƠNG 4 — KHUNG ĐỀ XUẤT · 8–10 trang
 
-- **4.1 Kiến trúc khung chia sẻ mẫu trung bình** `[VIẾT]`, theo sơ đồ đề cương: giai đoạn chuẩn bị ở client, gom và phát ở máy chủ, huấn luyện cục bộ với cách dùng thay được, tổng hợp FedAvg. Dùng lại mục 4.1.2 của `archive/…/04_chuong4.md` bản 24/09, sửa theo `[QUYẾT]` tập $V$ ở §3.2.
-- **4.2 Các cách dùng mẫu trung bình** `[VIẾT]`: FedMix (Taylor), NaiveMix, FedBR; mỗi cách một công thức mục tiêu cục bộ, cùng đầu vào $V$. Làm rõ cái gì giống nhau (kênh dữ liệu, chi phí truyền) và cái gì khác (cách tiêu thụ, có dùng nhãn hay không).
-- **4.3 Chuẩn hoá số hạng Taylor** `[SỬA]` từ mục 4.2.3 bản 24/09, áp hàng 1–2 của khối lượt 3 (cả ba bản cài đặt; cấu hình B′).
-- **4.4 Chi phí tài nguyên** `[SỬA]` từ mục 4.4.2 bản 24/09: công thức chi phí truyền thông (4.6), cộng thời gian và bộ nhớ đo được.
-- **4.5 Giao thức đo lường** `[SỬA]` từ mục 4.5 bản 24/09: so sánh theo cặp; chỉ so trong cùng nền tảng; chỉ số top-5 kèm chỉ số 5 vòng cuối; ước lượng thay vì kiểm định; khai báo số hạt giống theo IR#5.
+**Nguyên tắc (học viên, 25/09):** Ch.4 chỉ trình bày đề xuất. Không bàn về mã nguồn, bản cài đặt của ai, hay thiết lập thực nghiệm; những thứ đó nằm ở Ch.5. Không tiểu mục khi mục không đủ nội dung.
+
+- **4.1 Kiến trúc khung chia sẻ mẫu trung bình** `[ĐÃ VIẾT]`, một mục không tiểu mục: bốn giai đoạn, lớp ghi nhận, Thuật toán 4.1, Hình 4.1 (`figures/hinh4_1.png`).
+- **4.2 Các cách dùng mẫu trung bình** `[ĐÃ VIẾT]`: đoạn dẫn, Bảng 4.1, 4.2.1 NaiveMix, 4.2.2 FedMix, 4.2.3 FedBR.
+- **4.3 Chuẩn hoá số hạng Taylor** `[ĐÃ VIẾT]`: chỉ nêu logic thừa $1/B$ và phép thử số tỉ lệ bằng $B$; hai yếu tố gây nhiễu (biên độ gradient, phép co đầu vào).
+- **4.4 Chi phí tài nguyên** `[ĐÃ VIẾT]`, một mục không tiểu mục: công thức (4.1), ví dụ 4,3 MB so với 738 MB mỗi vòng; chi phí tính toán trỏ sang 5.4.
+- ~~4.5 Giao thức đo lường~~ → chuyển sang Ch.5 mục 5.1 (25/09).
 
 Các thiết kế của hướng cũ **không mang sang** hướng B: cấu hình C, trục Drop với P0–P4, mặt $(\lambda, M)$ đầy đủ. Chúng nằm trong `archive/`, có thể dùng lại nếu còn thời gian sau T2.
 
 ### CHƯƠNG 5 — THỰC NGHIỆM · 15–16 trang
 
-- **5.1 Thiết lập** `[VIẾT]`: hai nền tảng; bảng cấu hình mã FedBR (lấy từ bản ghi `args` và `hparams` trong `results.jsonl` của `02_attempt`).
+- **5.1 Thiết lập** `[ĐÃ VIẾT]`: 5.1.1 hai nền tảng (Bảng 5.1) và cấu hình nền tảng FedBR (Bảng 5.2, từ `args`/`hparams` của `02_attempt`), kèm chỗ thiết lập đi khác khung; 5.1.2 chỉ số và đại lượng ghi nhận; 5.1.3 so sánh theo cặp và cỡ mẫu; 5.1.4 họ giả thuyết H1/H2 (Bảng 5.3) và cách đọc các phép so sánh thăm dò.
 - **5.2 Thực nghiệm dưới lệch nhãn trên nền tảng Flower** `[ĐÃ VIẾT]`, 5.2.1–5.2.5 — xem `05_chuong5.md`.
-- **5.3 So sánh các cách dùng mẫu trung bình trên mã nguồn FedBR** `[CHẠY: T0, T1]`:
+- **5.3 So sánh các cách dùng mẫu trung bình trên nền tảng FedBR** `[CHẠY: T0, T1]`:
   - 5.3.1 tái hiện bảng CIFAR-10 của bài FedBR (`02_attempt` + T0);
-  - 5.3.2 FedMix bản gốc so với bản sửa, NaiveMix, FedBR, FedBR + Mixup (T1);
+  - 5.3.2 FedBR (H1), FedMix (H2), NaiveMix, FedBR + Mixup, FedProx; không có FedMix bản sửa vì không sửa mã (T0, T1);
   - 5.3.3 kiểm toán mã nguồn FedBR;
   - một đoạn mức cơ chế về bản port FedBR lên Flower.
 - **5.4 Chi phí tài nguyên** `[SỬA]`: thời gian mỗi 1000 vòng và bộ nhớ đỉnh (có sẵn trong `summary.csv`), chi phí truyền thông theo (4.6).
@@ -378,4 +382,7 @@ Phép thử cuối, không tự động được: **đọc to ba đoạn liên t
 |---|---|
 | 2026-09-24 | **Đổi sang hướng B** theo quyết định của học viên, sau khi so với đề cương. Hướng cũ ("xác định biên giới hiệu lực của cơ chế Taylor") được commit làm ảnh chụp (`c5ff78a`) rồi chuyển vào `archive/2026-09-24_huong-bien-gioi-hieu-luc/`. Hướng B: khung chia sẻ mẫu trung bình với ba cách dùng thay được (FedMix/Taylor, NaiveMix, FedBR), đánh giá trên hai nền tảng. Hướng A (FedBR cộng số hạng Taylor) giữ làm phần tuỳ chọn, chỉ chạy sau T0–T1. Giữ nguyên tên đề tài. Kế thừa §7 lối viết nguyên văn; IRON RULES kế thừa có sửa, thêm IR#11 (FedBR là phương pháp của Guo và cộng sự) và IR#12 (luôn nêu cách chuẩn hoá số hạng Taylor). Mục 5.2 (Flower) viết ngày 24/09 được mang sang nguyên văn. Đã kiểm với bài FedBR: Bảng 1 **có** FedMix làm đối chứng, nên khoảng trống ở Ch.2 mục 2.4 phải phát biểu hẹp (§1.4) |
 | 2026-09-24 *(lượt 2)* | **Viết xong phần lý thuyết Ch.3 và Ch.4, không sửa mã** (quyết định của học viên: tạm chưa đụng code). Ch.3: thêm **mục 3.5 FedBR**, công thức (3.16)–(3.19) **lấy theo mã nguồn** `fedbr/algorithms.py` và `train_fed.py` theo yêu cầu học viên, kèm bảng đối chiếu dòng mã. Ch.4: thân chương đầy đủ 4.1–4.5 (khung bốn giai đoạn, Bảng 4.1 ba cách dùng, chuẩn hoá số hạng Taylor, công thức chi phí truyền thông (4.1), giao thức đo). Hệ quả của việc không sửa mã: mọi kết quả FedMix dùng cách chuẩn hoá của mã phát hành; không có B′; không có đại lượng chẩn đoán theo lớp trên mã FedBR, nên mục tiêu 4 chỉ đo trên Flower; bỏ TOST vì với $n = 3$ nửa rộng khoảng tin cậy khoảng 3 pp. **Phát hiện mới:** trong mã FedBR, FedMix và NaiveMix nhận 32 mẫu trung bình mới mỗi bước, còn FedBR dùng 32 pseudo-sample cố định. Phép so FedBR − FedMix vì vậy là so hai phương pháp hoàn chỉnh, không tách được ảnh hưởng của cách dùng; hàng 5 của Ch.1 đã sửa theo (khối bổ sung cuối `01_chuong1.md`). **Còn chờ học viên:** họ giả thuyết chính ở Ch.4 mục 4.5.5 (H1 FedBR − FedAvg, H2 FedMix − FedAvg, Holm) phải chốt trước T0; Hình 4.1 chưa vẽ |
+| 2026-09-25 | **Ch.4 chỉ còn phần đề xuất; Ch.5 mục 5.1 viết xong** (học viên: hội đồng không quan tâm mã nguồn). Ch.4: thêm Thuật toán 4.1 và Hình 4.1 (`figures/hinh4_1.py`); 4.1 và 4.4 bỏ tiểu mục; bỏ 4.1.2 (khung trên mã nguồn) và 4.2.4 (đọc các phép so sánh); Bảng 4.1 chuyển vào 4.2; 4.3 chỉ nêu logic, không nhắc bản cài đặt của ai; 4.5 chuyển sang Ch.5 mục 5.1. Ch.5: viết 5.1.1–5.1.4, đánh lại số bảng (5.1–5.3 ở 5.1; cũ 5.1–5.7 thành 5.4–5.10); "mã nguồn FedBR" → "nền tảng FedBR". Ch.4 và Ch.5 được sửa đè vì chưa đưa vào Word. Chờ học viên quyết: đoạn DevPranjal ở 5.2.1, mục 5.3.3 kiểm toán mã. |
+| 2026-09-25 *(lượt 2)* | **Phụ lục A và rà Ch.3.** Mục 5.3.3 (kiểm toán mã FedBR) chuyển sang `07_phu-luc.md`, Phụ lục A. Ch.5 bỏ tên DevPranjal khỏi thân bài, sửa số trích dẫn theo Word (FedBR [2], CCVR [8]), trọng số $L_{	ext{bal}}$ đổi ký hiệu thành $\gamma$. Ch.3 rà trên bản Word 25/09: khối `RÀ SOÁT — 25/09/2026` cuối `03_chuong3.md`, 18 hàng (bỏ đoạn "Ánh xạ sang cài đặt", bỏ số của công thức đơn hình để hết trùng (3.2), gỡ các câu còn theo hướng cũ). Ch.3 và Ch.4 chỉ-append vì đã có trong Word; Ch.5 sửa đè. |
+| 2026-09-26 | **Rà Ch.1, Ch.2, Ch.3 theo Word 26/09** (chỉ-append). Ch.3: mục 3.5 viết lại không có tiểu mục "Ký hiệu" (3.5.1–3.5.5), sửa hai câu "Mã nguồn…" còn trong Word. Ch.1 (11 hàng) và Ch.2 (15 hàng): bỏ mọi chỗ nói về mã nguồn; **đóng góp thứ ba đổi thành "kiểm chứng lại các kết quả đã công bố"** (đo lại trên Flower, tái hiện bảng FedBR, chỉ ra thừa $1/B$), danh mục kiểm toán sang Phụ lục A; bỏ câu "khung sửa phép chuẩn hoá" vì không sửa mã; 2.4.1 đổi tiêu đề thành "Đối chứng giữa FedMix và NaiveMix" và nói rõ không chạy cấu hình cô lập; sửa trích dẫn sai ([2]→[4] ở 2.1.2; MOON [6] là FedProx, MOON thiếu trong danh mục). |
 | | *(agent tiếp theo cập nhật vào đây)* |

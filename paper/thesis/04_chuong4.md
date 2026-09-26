@@ -18,65 +18,7 @@
 | 4.2 Cô lập số hạng khai triển Taylor | 4.2 Các cách dùng mẫu trung bình |
 | 4.3 Ma trận chế độ lệch phân phối | 4.3 Chuẩn hoá số hạng Taylor |
 | 4.4 Mặt vận hành | 4.4 Chi phí tài nguyên |
-| 4.5 Giao thức đo lường | 4.5 Giao thức đo lường (giữ) |
-
----
-
-## Yêu cầu viết từng mục
-
-### Đoạn mở chương
-
-Hai đoạn ngắn:
-- **Đoạn 1:** chương trình bày khung học liên kết chia sẻ mẫu trung bình, trong đó cách dùng mẫu trung bình là thành phần thay được; khung dựng theo đúng bốn giai đoạn của mô hình đề xuất.
-- **Đoạn 2:** lộ trình năm mục.
-
-Không viện dẫn đề cương như nguồn quyền uy (§7.5). Lý do chọn kiến trúc phải nằm trong câu.
-
-### 4.1 Kiến trúc khung chia sẻ mẫu trung bình
-
-- **Dùng lại** mục 4.1.2 bản 24/09: bốn giai đoạn (chuẩn bị ở client, gom và phát ở máy chủ, huấn luyện cục bộ, tổng hợp), lớp ghi nhận, và Hình 4.1 kèm chú thích.
-- **Sửa theo quyết định về tập $V$** (dàn bài §3.2). Khung mô tả tập $V$ dựng một lần. Riêng thực nghiệm trên mã FedBR giữ hành vi của mã: FedMix và NaiveMix nhận mẫu trung bình dựng lại ở mỗi bước từ dữ liệu thô, còn FedBR dựng pseudo-data một lần. Viết thẳng rằng đây là lối tắt của mô phỏng, giữ lại để kết quả so được với bài FedBR. Hạn chế này ghi ở Ch.6.
-- **Dùng lại** mục 4.1.3 bản 24/09 (quan hệ với mã FedBR), bỏ các dòng thuộc hướng cũ: cấu hình C, tham số $\alpha_{\text{rot}}$, mốc IID có xoay, tập môi trường kiểm tra chung. Thêm: cờ chọn cách chuẩn hoá (M1), target NaiveMix (M2).
-- **Bảng 4.1 mới:** ba cách dùng × {nhận gì từ $V$ · dùng nhãn mềm không · mẫu trung bình đi vào đâu (đầu vào / số hạng gradient / đầu ra tầng phân lớp và không gian đặc trưng) · chi phí tính toán thêm}.
-
-### 4.2 Các cách dùng mẫu trung bình
-
-Mỗi cách dùng một đoạn và một công thức mục tiêu cục bộ, tham chiếu về Chương 3:
-- NaiveMix (3.12);
-- FedMix (3.15);
-- FedBR (mục 3.5).
-
-Làm rõ cái chung (cùng loại mẫu trung bình, cùng vị trí trong khung) và cái riêng (cách tiêu thụ, có dùng nhãn hay không).
-
-Nêu thẳng một điểm: FedMix và NaiveMix khác nhau ở hai chỗ cùng lúc (điểm đánh giá, số hạng gradient). Vì vậy phép so hai cách này **không** cô lập được riêng số hạng Taylor. Phát biểu đúng là so sánh hai cách dùng.
-
-Lưới bốn cấu hình và cấu hình C của hướng cũ (bản 24/09 mục 4.2.1): **chỉ đưa vào nếu T1 có chạy cấu hình C.**
-
-### 4.3 Chuẩn hoá số hạng Taylor
-
-- **Dùng lại** mục 4.2.3 bản 24/09, áp hàng 1–2 của khối lượt 3: cả ba bản cài đặt mã mở cùng thừa $1/B$; ví dụ tỉ lệ 8 và 32; cấu hình B′.
-- **Sửa câu nối B′** cho khớp hướng B: FedMix ở Ch.5 mục 5.2 (nền tảng Flower) và ở `02_attempt` đều là bản gốc; mục 5.3.2 so bản gốc với bản sửa.
-- **Dùng lại** hai yếu tố gây nhiễu còn đúng từ mục 4.2.4 bản 24/09:
-  - biên độ số hạng gradient;
-  - phép co đầu vào $(1{-}\lambda)x_i$, vì nó ảnh hưởng mọi so sánh FedMix với FedAvg.
-
-### 4.4 Chi phí tài nguyên
-
-- **Dùng lại** công thức (4.6) và đoạn *"hình dạng của phép đánh đổi"* ở mục 4.4.2 bản 24/09. Sửa chữ $n_V$ cho khớp cách mã FedBR dựng dữ liệu: FedMix/NaiveMix mỗi bước dựng 32 mẫu, FedBR dựng 32 pseudo-data một lần.
-- **Chi phí tính toán:** đo bằng thời gian mỗi bước và thời gian quy về 1000 vòng. Số đo nằm ở Ch.5 mục 5.4.
-
-### 4.5 Giao thức đo lường
-
-Dùng lại các tiểu mục của mục 4.5 bản 24/09, áp khối lượt 3 (bỏ `[TG]`):
-- **4.5.1 so sánh theo cặp.** Giữ.
-- **4.5.2 chỉ so trong cùng nền tảng.** Giữ.
-- **4.5.3 chỉ số độ chính xác.** Giữ: top-5 theo quy ước FedBR, kèm trung bình 5 mốc cuối.
-- **4.5.4 ước lượng và cỡ mẫu.** Sửa theo $n = 3$ của hướng B. Nửa rộng 2,98 pp ở $s = 1{,}2$; nói thẳng rằng hiệu dưới khoảng 3 điểm chỉ báo cáo được dưới dạng khoảng.
-- **4.5.5 họ giả thuyết.** **Viết lại** cho hướng B: không còn P1/P4.
-  - Đề xuất họ chính gồm hai phép so sánh trên mã FedBR: FedBR − FedAvg và FedMix bản sửa − FedAvg, hiệu chỉnh Holm.
-  - Mọi phép so sánh khác mang nhãn thăm dò.
-  - Chốt họ này **trước** khi chạy T0.
-- **4.5.6 đại lượng ghi nhận.** Giữ, áp hàng 7 của khối lượt 3.
+| 4.5 Giao thức đo lường | *(xoá tiêu đề; nội dung chuyển sang Chương 5, mục 5.1)* |
 
 ---
 
@@ -103,18 +45,31 @@ Không chạy T2 trước khi T0–T1 xong (PLAN §5).
 > - không có cấu hình B′ đối chiếu;
 > - không ghi thêm đại lượng chẩn đoán nào trên mã FedBR.
 >
-> Nếu sau này mã được sửa thì cập nhật mục 4.3 và 4.5.6.
+> Nếu sau này mã được sửa thì cập nhật mục 4.3 và Ch.5 mục 5.1.
 >
-> **Còn chờ học viên chốt `[QUYẾT]`:**
-> - họ giả thuyết chính ở mục 4.5.5 phải chốt **trước khi chạy T0**;
-> - Hình 4.1 chưa vẽ.
+> **Còn chờ học viên chốt `[QUYẾT]`:** họ giả thuyết chính, nay ở **Ch.5 mục 5.1.4**, phải chốt **trước khi chạy T0**.
+>
+> **Sửa 25/09 (học viên: chương chỉ trình bày đề xuất, không bàn về mã nguồn hay thiết lập thực nghiệm):**
+> - mục 4.1 gộp thành một mục, không tiểu mục; bỏ hẳn mục cũ 4.1.2 "Khung trên mã nguồn FedBR"; Hình 4.1 đã vẽ (`figures/hinh4_1.png`, mã vẽ `figures/hinh4_1.py`);
+> - Bảng 4.1 chuyển sang đầu mục 4.2, bỏ hàng "Mẫu trung bình trong mã nguồn";
+> - bỏ mục 4.2.4 "Đọc các phép so sánh"; nội dung chuyển sang Ch.5 mục 5.1.4;
+> - mục 4.3 chỉ nêu logic, không nhắc bản cài đặt nào hay của ai. Danh sách bản cài đặt và dòng mã nằm ở `INDEX_ma-nguon-va-ket-qua.md`, chỉ dùng khi hội đồng hỏi;
+> - mục 4.4 gộp thành một mục, không tiểu mục;
+> - **mục 4.5 chuyển toàn bộ sang Ch.5 mục 5.1** (Bảng 4.2 → Bảng 5.1, Bảng 4.3 → Bảng 5.3). Chỗ thiết lập thực nghiệm đi khác khung (NaiveMix/FedMix nhận mẫu trung bình mới mỗi bước) giờ nằm ở 5.1.1; Ch.6 vẫn phải nêu nó trong phần hạn chế.
 >
 > **Phát hiện mới khi viết mục 4.2.4.** Trong mã FedBR, FedMix và NaiveMix nhận 32 mẫu trung bình mới ở mỗi bước, còn FedBR dùng một tập 32 pseudo-sample cố định. Phép so FedBR với FedMix vì vậy không chỉ khác ở cách dùng mẫu trung bình. Câu tương ứng trong `01_chuong1.md` (hàng 5, *"…quy được cho cách dùng"*) nói quá; bản sửa ở khối bổ sung cuối file đó.
 >
 > **Tự kiểm §7.7** (thân chương):
 > - không có dấu `—` chêm, không có cụm sáo, không viện dẫn đề cương hay bài hội nghị;
-> - AI#1: hai khuôn tương phản, ở mục 4.2.4 và 4.5.2, đều để phân định phạm vi phép so sánh;
-> - AI#4: một câu rào, ở mục 4.3 (*"là kết quả về FedMix như nó đang được cài đặt"*).
+> - AI#1: khuôn tương phản ở mục 4.5.2 cũ đi theo sang Ch.5;
+> - AI#4: một câu rào, ở mục 4.3 (*"nói về FedMix với số hạng Taylor đã bị thu nhỏ $B$ lần"*).
+>
+> **Thuật toán 4.1 (mục 4.1):**
+> - mã giả mô tả **khung**, với $V$ dựng một lần; chỗ thiết lập thực nghiệm đi khác ghi ở Ch.5 mục 5.1.1;
+> - dòng 12 chọn $S_t$ để phủ cả hai nền tảng: Flower chọn 15/60 client mỗi vòng, mã FedBR lấy cả 10 client;
+> - dòng 18 chỉ ghi chú bước max của FedBR, chi tiết ở mục 3.5;
+> - nếu thêm hoặc bớt dòng, sửa số "dòng 17" ở câu dẫn;
+> - trong Word: đặt trong bảng một ô, phông đơn cách (Consolas), chú thích "Thuật toán 4.1" ở **phía trên**; tạo nhãn chú thích mới "Thuật toán" (References → Insert Caption → New Label).
 
 Chương này trình bày khung học liên kết chia sẻ mẫu trung bình đại diện mà luận văn đề xuất. Khung đi qua bốn giai đoạn:
 1. client tạo mẫu trung bình từ dữ liệu cục bộ;
@@ -124,16 +79,13 @@ Chương này trình bày khung học liên kết chia sẻ mẫu trung bình đ
 
 Điểm cốt lõi của khung là cách dùng mẫu trung bình ở giai đoạn thứ ba không bị cố định. Nó là một thành phần thay được, nên các phương pháp khác nhau đặt được vào cùng một khung và so được với nhau trên cùng một loại dữ liệu.
 
-Mục 4.1 mô tả kiến trúc của khung và cách khung được cài trên mã nguồn FedBR [11]. Mục 4.2 trình bày ba cách dùng mẫu trung bình và cách đọc các phép so sánh giữa chúng. Mục 4.3 phân tích phép chuẩn hoá số hạng Taylor trong các bản cài đặt FedMix hiện có. Chi phí tài nguyên được tính ở mục 4.4. Mục 4.5 là giao thức đo lường, áp cho mọi phép so sánh ở Chương 5.
+Mục 4.1 mô tả kiến trúc của khung. Mục 4.2 trình bày ba cách dùng mẫu trung bình. Mục 4.3 phân tích cách chuẩn hoá số hạng Taylor khi tính theo lô. Mục 4.4 tính chi phí tài nguyên của khung.
 
 ## 4.1. Kiến trúc khung chia sẻ mẫu trung bình
 
-### 4.1.1. Bốn giai đoạn
+Hình 4.1 là sơ đồ của khung, gồm bốn giai đoạn đã nêu và một lớp ghi nhận bao quanh.
 
-**Giai đoạn chuẩn bị ở client** diễn ra một lần, trước vòng truyền thông đầu tiên.
-- Client $i$ rút ngẫu nhiên $M$ ảnh cục bộ và tính ảnh trung bình cùng nhãn mềm theo (3.11), rồi lặp lại $n_V$ lần để có $n_V$ mẫu trung bình. Các mẫu này được gửi lên máy chủ.
-- Ảnh riêng lẻ không rời client; thứ rời client là trung bình của $M$ ảnh.
-- Tham số $M$ quyết định mức làm mịn: $M = 1$ tương đương gửi ảnh thô, còn $M$ lớn cho ảnh gần như không nhận dạng được. $M$ vì vậy là thước đo thô cho mức làm mịn của dữ liệu được chia sẻ.
+**Giai đoạn chuẩn bị ở client** diễn ra một lần, trước vòng truyền thông đầu tiên. Client $i$ rút ngẫu nhiên $M$ ảnh cục bộ, lấy trung bình của chúng theo (3.11) để được một ảnh trung bình, kèm nhãn mềm nếu cách dùng cần đến nhãn. Lặp lại $n_V$ lần, client có tập $V_i$ gồm $n_V$ mẫu trung bình và gửi tập này lên máy chủ. Ảnh riêng lẻ không bao giờ rời client. Tham số $M$ quyết định mức làm mịn của dữ liệu được chia sẻ: với $M = 1$, client gửi thẳng ảnh thô, còn $M$ càng lớn thì ảnh trung bình càng khó nhận ra nội dung.
 
 **Máy chủ** gom mẫu của mọi client thành tập $V = \bigcup_i V_i$ gồm $N n_V$ phần tử, rồi phát tập đó xuống mọi client, cũng một lần. Từ đây $V$ cố định trong suốt quá trình huấn luyện.
 
@@ -143,21 +95,57 @@ Mục 4.1 mô tả kiến trúc của khung và cách khung được cài trên 
 
 **Lớp ghi nhận** bao quanh cả bốn giai đoạn. Ở mỗi mốc đánh giá, nó ghi độ chính xác trên từng tập kiểm tra, thời gian mỗi bước, và toàn bộ cấu hình của lần chạy.
 
-> `[CẦN VẼ — Hình 4.1]` Sơ đồ hai cột theo bố cục mô hình đề xuất: máy chủ bên trái, client bên phải. Khối "Huấn luyện cục bộ" có một bộ chọn ba nhánh: NaiveMix / FedMix / FedBR.
+Thuật toán 4.1 tóm tắt bốn giai đoạn. Cách dùng mẫu trung bình chỉ xuất hiện ở dòng 17, qua hàm mất mát $\mathcal{L}_g$; đổi $g$ là đổi phương pháp, các dòng còn lại giữ nguyên.
 
-**Hình 4.1.** Kiến trúc khung chia sẻ mẫu trung bình. Mũi tên nét đứt là trao đổi diễn ra một lần trước huấn luyện: mẫu trung bình đi lên máy chủ, tập $V$ đi xuống client. Mũi tên nét liền là trao đổi tham số mô hình ở mỗi vòng truyền thông. Bộ chọn trong khối huấn luyện cục bộ quyết định mẫu trung bình được dùng theo cách nào.
+**Thuật toán 4.1.** Khung học liên kết chia sẻ mẫu trung bình.
 
-### 4.1.2. Khung trên mã nguồn FedBR
+```text
+Đầu vào: N client với dữ liệu cục bộ D_1, …, D_N; số vòng truyền thông T;
+         số bước cục bộ K; kích thước lô B; tốc độ học η;
+         số ảnh mỗi mẫu trung bình M; số mẫu trung bình mỗi client n_V;
+         cách dùng g ∈ {FedAvg, NaiveMix, FedMix, FedBR}; tham số khởi tạo w_0
+Đầu ra:  tham số mô hình toàn cục w_T
 
-Khung được cài trên mã nguồn công bố của [11]. Mã này đã có ba cách dùng dưới dạng ba thuật toán NaiveMix, FedMix và FedBR, cùng bộ dữ liệu CIFAR-10 xoay, bộ phân hoạch dữ liệu và các thuật toán đối chứng. Luận văn dùng các thuật toán ấy như ba lựa chọn của giai đoạn huấn luyện cục bộ, và giữ nguyên mã.
+    ▷ Giai đoạn 1: chuẩn bị ở client (một lần)
+ 1: for mỗi client i = 1, …, N do
+ 2:     V_i ← ∅
+ 3:     for p = 1, …, n_V do
+ 4:         rút ngẫu nhiên M mẫu {(x_m, y_m)}, m = 1..M, từ D_i
+ 5:         x̄ ← (1/M) Σ_m x_m ;   ȳ ← (1/M) Σ_m y_m               ▷ (3.11)
+ 6:         V_i ← V_i ∪ {(x̄, ȳ)}                                  ▷ FedBR bỏ ȳ
+ 7:     end for
+ 8:     gửi V_i lên máy chủ
+ 9: end for
+    ▷ Giai đoạn 2: gom và phát ở máy chủ (một lần)
+10: V ← V_1 ∪ … ∪ V_N ;  gửi V tới mọi client
+11: for t = 0, …, T − 1 do
+12:     chọn tập client S_t tham gia vòng t
+13:     for mỗi client i ∈ S_t, song song do
+        ▷ Giai đoạn 3: huấn luyện cục bộ
+14:         w ← w_t
+15:         for k = 1, …, K do
+16:             lấy lô {(x_b, y_b)}, b = 1..B, từ D_i và lô {(x̄_b, ȳ_b)}, b = 1..B, từ V
+17:             ℒ ← ℒ_g(w; lô cục bộ, lô từ V)        ▷ (3.12), (3.15) hoặc (3.19); FedAvg bỏ qua V
+18:             w ← w − η ∇_w ℒ                         ▷ FedBR: thêm bước cập nhật tầng chiếu
+19:         end for
+20:         gửi w_t^i ← w lên máy chủ
+21:     end for
+        ▷ Giai đoạn 4: tổng hợp ở máy chủ
+22:     w_{t+1} ← Σ_{i∈S_t} ( |D_i| / Σ_{j∈S_t} |D_j| ) · w_t^i
+23:     ghi độ chính xác, thời gian mỗi bước, cấu hình          ▷ lớp ghi nhận
+24: end for
+25: return w_T
+```
 
-Mã nguồn đi khác sơ đồ ở giai đoạn chuẩn bị, và luận văn giữ nguyên chỗ khác đó.
-- **FedBR** dựng pseudo-data đúng một lần trước huấn luyện: 32 mẫu, mỗi mẫu là trung bình của 10 ảnh. Cách này khớp với giai đoạn chuẩn bị.
-- **NaiveMix và FedMix** dựng lại một lô 32 mẫu trung bình mới ở mỗi bước cục bộ, mỗi mẫu cũng là trung bình của 10 ảnh, lấy thẳng từ dữ liệu thô của mọi client.
+![Hình 4.1](figures/hinh4_1.png)
 
-Cách làm thứ hai chỉ chạy được trong mô phỏng, nơi mọi dữ liệu nằm trên một máy. Luận văn giữ nó để kết quả so được với bảng công bố của [11], và Chương 6 nêu nó trong phần hạn chế.
+**Hình 4.1.** Kiến trúc khung chia sẻ mẫu trung bình. Mũi tên nét đứt là trao đổi diễn ra một lần trước huấn luyện: mẫu trung bình đi lên máy chủ, tập $V$ đi xuống client. Mũi tên nét liền đậm là trao đổi tham số mô hình ở mỗi vòng truyền thông. Bộ chọn trong khối huấn luyện cục bộ quyết định mẫu trung bình được dùng theo cách nào. Số trong vòng tròn đen là bốn giai đoạn của Thuật toán 4.1; khung chấm bao ngoài là lớp ghi nhận.
 
-**Bảng 4.1.** Ba cách dùng mẫu trung bình trong khung. $x_i$ là ảnh cục bộ; $\bar x_g$ và $\bar y_g$ là ảnh trung bình và nhãn mềm theo (3.11); $u_p$ là pseudo-sample theo (3.16); $\lambda$ là trọng số trộn của NaiveMix và FedMix; $C$ là số lớp. Hàng cuối mô tả mã nguồn của [11] mà Chương 5 chạy.
+## 4.2. Các cách dùng mẫu trung bình
+
+Luận văn xét ba cách dùng mẫu trung bình ở giai đoạn huấn luyện cục bộ. Cả ba nhận cùng một loại mẫu trung bình và đứng ở cùng một vị trí trong khung; chúng khác nhau ở chỗ có dùng nhãn hay không và mẫu trung bình đi vào mục tiêu huấn luyện ở đâu. Bảng 4.1 tóm tắt các điểm này, các mục 4.2.1 đến 4.2.3 trình bày từng cách.
+
+**Bảng 4.1.** Ba cách dùng mẫu trung bình trong khung. $x_i$ là ảnh cục bộ; $\bar x_g$ và $\bar y_g$ là ảnh trung bình và nhãn mềm theo (3.11); $u_p$ là pseudo-sample theo (3.16); $\lambda$ là trọng số trộn của NaiveMix và FedMix; $C$ là số lớp.
 
 | | NaiveMix | FedMix | FedBR |
 |---|---|---|---|
@@ -166,9 +154,6 @@ Cách làm thứ hai chỉ chạy được trong mô phỏng, nơi mọi dữ li
 | Mẫu trung bình đi vào đâu | đầu vào mô hình, trộn với ảnh cục bộ | tích vô hướng với gradient theo đầu vào | đầu ra tầng phân lớp và không gian đặc trưng |
 | Mục tiêu cục bộ | (3.12) | (3.15) | (3.19) |
 | Tính toán thêm mỗi bước so với FedAvg | không đáng kể | một lượt lan truyền ngược bậc hai | các lượt truyền xuôi trên pseudo-data và tầng chiếu, cùng một bước cập nhật riêng cho tầng chiếu |
-| Mẫu trung bình trong mã nguồn | 32 mẫu mới mỗi bước | 32 mẫu mới mỗi bước | 32 mẫu, dựng một lần |
-
-## 4.2. Các cách dùng mẫu trung bình
 
 ### 4.2.1. Trộn trực tiếp: NaiveMix
 
@@ -182,29 +167,19 @@ FedMix xấp xỉ chính mục tiêu (3.12) bằng khai triển Taylor bậc nh�
 
 FedBR bỏ nhãn của mẫu trung bình và dùng nó theo (3.19). Ở đầu ra tầng phân lớp, $L_{\text{bal}}$ kéo dự đoán trên pseudo-data về phân phối đều. Ở không gian đặc trưng, $\ell_{\text{con}}$ kéo đặc trưng cục bộ của pseudo-data về đặc trưng toàn cục của chính nó, qua một bài toán min-max với tầng chiếu. Mẫu trung bình không đi vào lượt truyền xuôi trên dữ liệu cục bộ, và không có trọng số trộn nào.
 
-### 4.2.4. Đọc các phép so sánh
-
-**Với FedAvg.** Hiệu giữa mỗi cách dùng và FedAvg đo mức cải thiện của một phương pháp hoàn chỉnh so với đường cơ sở. Đây là loại so sánh chính của Chương 5.
-
-**FedMix với NaiveMix.** Hai cách dùng nhận cùng mẫu trung bình, cùng nhãn mềm và cùng trọng số trộn, nhưng khác nhau ở hai chỗ cùng lúc: điểm đánh giá hàm mất mát, và sự có mặt của số hạng gradient. Hiệu giữa chúng vì vậy so hai cách dùng cùng một thông tin, và không quy riêng được cho số hạng Taylor.
-
-Việc dùng chung một trọng số trộn vẫn loại được một nguồn nhiễu có thật trong bài báo FedMix [1]. Ở bảng kết quả chính của bài báo đó, NaiveMix đạt 77,4% và FedMix 81,2% trên CIFAR-10. Trong phép quét trọng số trộn ở phụ lục, giá trị tốt nhất của NaiveMix là 80,6%, chỉ còn cách FedMix 0,6 điểm. Luận văn đặt $\lambda = 0{,}1$ cho cả hai, là giá trị mặc định của mã nguồn [11], và chốt giá trị này trước khi chạy.
-
-**FedBR với FedMix.** Phép so này khác nhau ở nhiều chỗ hơn chỉ cách dùng mẫu trung bình. Trong mã nguồn, FedMix nhìn thấy một lô mẫu trung bình mới ở mỗi bước, còn FedBR chỉ có 32 pseudo-sample cố định. FedBR còn có thêm tầng chiếu, bước cập nhật riêng cho tầng chiếu, và bộ siêu tham số riêng. Hiệu giữa hai phương pháp vì vậy là hiệu giữa hai phương pháp hoàn chỉnh cùng dùng một loại dữ liệu, chứ không phải phép đo tách riêng ảnh hưởng của cách dùng.
-
 ## 4.3. Chuẩn hoá số hạng Taylor
 
-Để FedMix đúng là (3.15), cả ba số hạng phải được lấy trung bình trên lô theo cùng một cách. Luận văn đối chiếu ba bản cài đặt FedMix mã mở: mã nguồn của [11], bản cài đặt trên nền tảng Flower dùng ở mục 5.2, và bản cài đặt của DevPranjal. Cả ba làm vậy với hai số hạng đầu, nhưng không làm với số hạng thứ ba.
+Để FedMix đúng là (3.15), cả ba số hạng phải được lấy trung bình trên lô theo cùng một cách. Cách tính theo lô thường gặp đáp ứng điều này với hai số hạng đầu, nhưng không đáp ứng với số hạng thứ ba.
 
-Trình tự tính trong cả ba bản cài đặt giống nhau:
-1. Số hạng thứ nhất là $(1{-}\lambda)$ nhân **trung bình** cross-entropy trên lô $B$ ảnh đã co tỉ lệ. Đạo hàm của nó theo từng ảnh vì vậy mang sẵn thừa số $(1{-}\lambda)/B$.
-2. Số hạng thứ ba nhân đạo hàm đó với $\bar x_g$, nhân thêm $\lambda$, rồi lấy trung bình hoặc chia cho $B$ một lần nữa.
+Cách tính đó đi qua hai bước:
+1. Số hạng thứ nhất là $(1{-}\lambda)$ nhân **trung bình** cross-entropy trên lô $B$ ảnh đã co tỉ lệ. Gradient theo đầu vào mà số hạng thứ ba cần được lấy bằng cách đạo hàm chính số hạng này, nên gradient của từng ảnh mang sẵn thừa số $(1{-}\lambda)/B$.
+2. Số hạng thứ ba nhân gradient đó với $\bar x_g$, nhân thêm $\lambda$, rồi lấy trung bình trên lô, tức chia cho $B$ một lần nữa.
 
 Thừa số $1/B$ xuất hiện hai lần. Số hạng (III) vì vậy đi vào mục tiêu với hệ số $\lambda(1{-}\lambda)/B$ thay cho $\lambda(1{-}\lambda)$. Thừa số $\lambda(1{-}\lambda)$ được tính đúng; chỗ lệch nằm ở phép chuẩn hoá theo lô.
 
-Phép thử trực tiếp xác nhận điều này. Đoạn mã tính số hạng thứ ba của mã nguồn [11] được chạy nguyên văn trên một mạng tuyến tính nhỏ, rồi so với trung bình trên lô của số hạng (III) tính từ gradient của từng mẫu. Tỉ lệ giữa hai giá trị đúng bằng 8 khi lô có 8 ảnh và bằng 32 khi lô có 32 ảnh. Với kích thước lô trong cấu hình thực nghiệm, số hạng Taylor nhỏ hơn công thức 32 lần trên mã nguồn [11] và 10 lần trên nền tảng Flower.
+Một phép thử số xác nhận điều này. Trên một mạng tuyến tính nhỏ, số hạng thứ ba tính theo hai bước trên được so với trung bình trên lô của số hạng (III) tính từ gradient của từng mẫu. Tỉ lệ giữa hai giá trị đúng bằng 8 khi lô có 8 ảnh và bằng 32 khi lô có 32 ảnh, tức đúng bằng $B$. Với lô 32 và lô 10 dùng ở Chương 5, số hạng Taylor vì vậy nhỏ hơn công thức lần lượt 32 và 10 lần.
 
-Mọi kết quả FedMix trong luận văn đều dùng cách chuẩn hoá này, và mỗi bảng kết quả ghi rõ điều đó. Các kết quả ấy vì vậy là kết quả về FedMix như nó đang được cài đặt; biên độ của số hạng Taylor theo đúng (3.15) không được đo trong luận văn.
+Mọi kết quả FedMix trong luận văn đều dùng cách chuẩn hoá này, và mỗi bảng kết quả ghi rõ điều đó. Các kết quả ấy vì vậy nói về FedMix với số hạng Taylor đã bị thu nhỏ $B$ lần; biên độ của số hạng Taylor theo đúng (3.15) không được đo trong luận văn.
 
 Hai yếu tố khác cũng ảnh hưởng tới cách đọc kết quả FedMix.
 
@@ -214,7 +189,7 @@ Hai yếu tố khác cũng ảnh hưởng tới cách đọc kết quả FedMix.
 
 ## 4.4. Chi phí tài nguyên
 
-### 4.4.1. Chi phí truyền thông
+Khung tốn thêm tài nguyên ở hai chỗ: truyền mẫu trung bình, và phần tính toán thêm của cách dùng ở giai đoạn huấn luyện cục bộ.
 
 Theo thiết kế của khung, mẫu trung bình chỉ được truyền một lần trước vòng đầu tiên, theo hai chiều. Gọi:
 - $N$ là số client, $n_V$ là số mẫu trung bình mỗi client gửi;
@@ -225,74 +200,20 @@ $C_y = C$ khi nhãn mềm được gửi, như ở NaiveMix và FedMix, và $C_y
 
 $$\mathrm{Cost}_V = N\,n_V\,(d_x + C_y)\,b\,(N + 1). \tag{4.1}$$
 
-Với CIFAR-10, $d_x = 3 \times 32 \times 32 = 3072$ và $C = 10$. Lấy cấu hình pseudo-data của mã nguồn [11]: 32 mẫu cho cả hệ thống, 10 client, số thực 4 byte. Khi đó (4.1) cho khoảng 4,3 MB, trả một lần. Để so sánh, VGG11 không chuẩn hoá theo lô có khoảng 9,23 triệu tham số. Mỗi vòng truyền thông với 10 client đi rồi về mất khoảng $2 \times 10 \times 9{,}23 \times 10^6 \times 4 \approx 738$ MB. Chi phí phụ trội của mẫu trung bình vì vậy dưới 1% lưu lượng của một vòng, và chỉ trả một lần.
+Với CIFAR-10, $d_x = 3 \times 32 \times 32 = 3072$ và $C = 10$. Lấy cấu hình pseudo-data của [11]: 32 mẫu cho cả hệ thống, 10 client, số thực 4 byte. Khi đó (4.1) cho khoảng 4,3 MB, trả một lần. Để so sánh, VGG11 không chuẩn hoá theo lô có khoảng 9,23 triệu tham số. Mỗi vòng truyền thông với 10 client đi rồi về mất khoảng $2 \times 10 \times 9{,}23 \times 10^6 \times 4 \approx 738$ MB. Chi phí phụ trội của mẫu trung bình vì vậy dưới 1% lưu lượng của một vòng, và chỉ trả một lần.
 
 Với $n_V$ cố định, (4.1) không phụ thuộc $M$ hay $\lambda$: trung bình của 10 ảnh có cùng kích thước với một ảnh. Muốn đổi chi phí truyền thông thì phải đổi số mẫu trung bình.
 
-### 4.4.2. Chi phí tính toán
+Phần tính toán thêm đã nêu ở hàng cuối Bảng 4.1. NaiveMix gần như không tốn thêm. FedMix cần thêm một lượt lan truyền ngược bậc hai để lấy gradient theo đầu vào. FedBR cần thêm các lượt truyền xuôi trên pseudo-data và tầng chiếu, cùng một bước cập nhật riêng cho tầng chiếu. Mức tốn thêm thực tế phụ thuộc phần cứng, nên luận văn đo nó bằng thời gian mỗi bước cục bộ quy về 1000 vòng truyền thông; số đo nằm ở mục 5.4.
 
-Chi phí tính toán được đo, không tính theo công thức: thời gian mỗi bước cục bộ ghi trong nhật ký của từng lần chạy, quy về 1000 vòng truyền thông. Theo cấu trúc ở Bảng 4.1:
-- NaiveMix gần như không tốn thêm;
-- FedMix tốn thêm một lượt lan truyền ngược bậc hai để lấy gradient theo đầu vào;
-- FedBR tốn thêm các lượt truyền xuôi trên pseudo-data và tầng chiếu, cùng một bước cập nhật riêng.
+---
 
-Số đo nằm ở Chương 5 mục 5.4.
+# BỔ SUNG — 25/09/2026 · số trích dẫn theo danh mục Word
 
-## 4.5. Giao thức đo lường
+> Chỉ-append (Chương 4 đã có trong Word). Danh mục Word hiện đánh [1] FedMix, **[2] FedBR**, **[3] FedAvg**. Thân chương ở khối trên còn ghi FedAvg [2] và FedBR [11]; Word đã sửa FedAvg thành [3], còn một chỗ FedBR chưa sửa.
 
-### 4.5.1. So sánh theo cặp
+| # | Mục | Tìm trong Word | Trước | Sau |
+|---|---|---|---|---|
+| 1 | 4.4, đoạn ví dụ CIFAR-10 | `cấu hình pseudo-data của [11]` | Lấy cấu hình pseudo-data của [11]: | Lấy cấu hình pseudo-data của [2]: |
 
-Mọi mức cải thiện được tính theo cặp. Hai cấu hình đem so dùng cùng một hạt giống, và hạt giống quyết định cùng lúc lần rút phân hoạch dữ liệu, trọng số khởi tạo và thứ tự các lô. Lịch học và số vòng cũng như nhau. Với mỗi hạt giống, hiệu độ chính xác giữa hai cấu hình là một quan sát; khoảng tin cậy được tính trên các quan sát đó. Cách làm này loại khỏi phép so sánh phần phương sai do phân hoạch dữ liệu, vốn lớn trong học liên kết mô phỏng.
-
-### 4.5.2. Chỉ so sánh trong cùng một nền tảng
-
-Luận văn chạy thực nghiệm trên hai nền tảng. Nền tảng Flower dùng cho các thực nghiệm dưới lệch phân phối nhãn ở mục 5.2; mã nguồn [11] dùng cho các thực nghiệm còn lại của Chương 5.
-
-**Bảng 4.2.** Hai nền tảng thực nghiệm. Tham số Dirichlet ghi theo quy ước của Chương 3.
-
-| | Nền tảng Flower | Mã nguồn FedBR [11] |
-|---|---|---|
-| Client | 60, mỗi vòng chọn 15 | 10, tham gia mọi vòng |
-| Backbone | VGG sửa đổi theo phụ lục của [1], không chuẩn hoá theo lô, $d = 512$ | VGG11 không chuẩn hoá theo lô, $d = 512$ |
-| Lệch phân phối | nhãn: hai lớp mỗi client, hoặc Dirichlet nồng độ mỗi thành phần $\beta$ trên trục client, 60 thành phần | nhãn: Dirichlet $\alpha = 0{,}1$ nồng độ tổng trên trục lớp, kèm xoay theo client với $\alpha_{\text{rot}} = 1{,}0$ nồng độ tổng |
-| Huấn luyện cục bộ | 2 epoch, lô 10 | 50 bước, lô 32 |
-| Chỉ số chính | độ chính xác cao nhất theo vòng trên tập kiểm tra | trung bình năm độ chính xác cao nhất theo vòng trên phần dữ liệu giữ lại của các client |
-
-Hai nền tảng khác nhau ở gần như mọi thành phần của thiết lập, nên con số tuyệt đối của chúng không đặt cạnh nhau được. Mọi phát biểu bắc qua hai nền tảng đặt ở mức cơ chế, dạng "hiện tượng X xuất hiện ở cả hai", chứ không ở dạng "độ chính xác tăng từ $a$ lên $b$".
-
-### 4.5.3. Chỉ số độ chính xác
-
-Trên mã nguồn [11], chỉ số chính là chỉ số của bài báo FedBR: trung bình năm độ chính xác cao nhất theo vòng, đo trên phần dữ liệu giữ lại của các client. Dùng chỉ số này thì bảng tái hiện so được với bảng công bố.
-
-Chỉ số này có một nhược điểm: năm mốc được chọn theo chính độ chính xác trên tập đánh giá, nên giá trị bị kéo lên. Độ thiên tác động lên mọi phương pháp, nhưng không nhất thiết như nhau; phương pháp có đường học dao động mạnh hơn được lợi nhiều hơn. Vì vậy, với các phép so sánh thuộc họ giả thuyết chính, luận văn báo cáo kèm trung bình năm mốc đánh giá cuối cùng, một chỉ số không chọn theo tập đánh giá. Nếu hai chỉ số cho hiệu trái dấu nhau, điều đó được báo cáo cùng kết quả.
-
-### 4.5.4. Ước lượng và cỡ mẫu
-
-Mỗi cấu hình trong phép so sánh chính chạy với ba hạt giống. Để định cỡ, luận văn lấy độ lệch chuẩn của hiệu theo cặp là $s \approx 1{,}2$ điểm phần trăm. Trên nền tảng Flower, độ lệch chuẩn của các hiệu theo cặp ở mục 5.2 phần lớn nằm trong khoảng 0,79 đến 1,37 điểm, và 1,2 gần đầu trên của khoảng đó.
-
-Với $n = 3$ và $t_{0{,}975;\,2} = 4{,}303$, nửa rộng khoảng tin cậy 95% của trung bình hiệu là $4{,}303 \times 1{,}2 / \sqrt{3} \approx 2{,}98$ điểm phần trăm. Một hiệu nhỏ hơn khoảng ba điểm vì vậy không phân biệt được với không, và chỉ được báo cáo dưới dạng khoảng. Khi khoảng tin cậy chứa không, luận văn nói thẳng là phép đo không phân giải được hiệu đó. Luận văn không diễn giải kết quả ấy thành bằng chứng rằng hai phương pháp tương đương, vì một kiểm định không có ý nghĩa thống kê không chứng minh giả thuyết không.
-
-Giá trị $s$ lấy từ nền tảng Flower và chỉ dùng để định cỡ. Độ lệch chuẩn thật trên mã nguồn [11] được ước lượng từ chính ba hạt giống và báo cáo ở Chương 5.
-
-### 4.5.5. Họ giả thuyết chính
-
-Để kiểm soát so sánh bội, luận văn khai báo trước một họ giả thuyết chính gồm hai phép so sánh trên mã nguồn [11], ở cấu hình của Bảng 4.2 với $\lambda = 0{,}1$ (Bảng 4.3).
-
-**Bảng 4.3.** Họ giả thuyết chính. Mỗi giả thuyết được kiểm định bằng phép kiểm định t theo cặp hai phía trên ba hạt giống; cả họ hiệu chỉnh theo thủ tục Holm ở mức 5%. FedMix dùng cách chuẩn hoá số hạng Taylor của mã phát hành (mục 4.3).
-
-| | Giả thuyết không |
-|---|---|
-| H1 | $\mathrm{Acc}_{\text{FedBR}} - \mathrm{Acc}_{\text{FedAvg}} = 0$ |
-| H2 | $\mathrm{Acc}_{\text{FedMix}} - \mathrm{Acc}_{\text{FedAvg}} = 0$ |
-
-Mọi phép so sánh khác mang nhãn thăm dò và không tham gia hiệu chỉnh: FedProx, NaiveMix, FedBR + Mixup, hiệu FedMix − NaiveMix, và các thuật toán chỉ có trong bảng tái hiện một hạt giống.
-
-### 4.5.6. Các đại lượng được ghi nhận
-
-Trên mã nguồn [11], mỗi lần chạy ghi lại ở mỗi mốc đánh giá:
-- độ chính xác trên phần dữ liệu giữ lại của từng client;
-- độ chính xác trên mười tập kiểm tra xoay góc cố định;
-- thời gian mỗi bước;
-- toàn bộ cấu hình siêu tham số.
-
-Nhật ký của mã nguồn này không ghi độ chính xác theo từng lớp, cũng không ghi chuẩn của các vector trọng số theo lớp. Vì vậy phân tích dạng thiên lệch của tầng phân lớp, tức mục tiêu cụ thể thứ tư, chỉ thực hiện trên nền tảng Flower, ở mục 5.2.4.
+Ràng buộc IR#11 ở khối trạng thái đầu file đọc là "đi kèm [2]".
