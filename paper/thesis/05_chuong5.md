@@ -20,7 +20,8 @@
 > - 5.1.3 viết lại: Flower dùng khoảng tin cậy trên ba hạt giống; FedBR dùng **ngưỡng đọc 3 điểm phần trăm**, lấy từ chênh lệch giữa lượt chạy lại và bảng công bố ở Bảng 5.9;
 > - 5.1.4 bỏ kiểm định t và Holm (không làm được với một hạt giống); H1/H2 thành hai phép so sánh chính S1/S2 đọc theo ngưỡng;
 > - 5.3.1, 5.3.2 viết xong từ `02_attempt`; 5.3.3 không còn chờ thêm hạt giống;
-> - T2 (hướng A) đang chạy trên Vast, cũng một hạt giống; thân chương chưa nhắc A.
+> - T2 (hướng A) đang chạy trên Vast, cũng một hạt giống; thân chương chưa nhắc A;
+> - **bỏ đoạn FedBR chạy trên nền tảng Flower** ở 5.3.2 (học viên): bản cài FedBR bên kho Flower chưa được xác nhận khớp FedBR gốc, nên kết quả của nó không dùng trong luận văn.
 >
 > ⚠️ **Ch.1 và Ch.2 trong Word** còn vài câu nói "ba hạt giống" hoặc "khoảng tin cậy" chung cho mọi so sánh (1.2.1, 1.2.3, 1.3 đóng góp 2; 2.4.4 đóng góp 1–2). Học viên chọn không rà hai chương này ở lượt 26/09; khi rà lại thì sửa theo mục 5.1.3.
 >
@@ -293,7 +294,6 @@ S2 nằm dưới ngưỡng. FedMix kém FedAvg 2,29 điểm theo chỉ số chí
 
 Hàng NaiveMix chờ lượt chạy T1. Nếu có, hiệu FedMix − NaiveMix được đọc theo mục 5.1.4 và ngưỡng ở mục 5.1.3.
 
-`[VIẾT]` Một đoạn mức cơ chế về FedBR chạy trên nền tảng Flower, theo cấu hình của bài FedBR (10 client, Dirichlet $\alpha = 0{,}1$, xoay, VGG11, lô 32, 50 bước cục bộ), 500 vòng, một hạt giống: hiệu FedBR − FedAvg theo chỉ số chính là −0,23 điểm khi có tăng cường dữ liệu (57,26 so với 57,49) và +0,86 điểm khi không có (56,04 so với 55,18), cả hai dưới ngưỡng. Lợi thế của FedBR không lặp lại ở đó. Nguồn: `INDEX` §4.3. Nêu rõ 500 so với 1000 vòng; không so con số tuyệt đối với Bảng 5.10 (IR#4).
 
 ### 5.3.3. Mẫu trung bình còn giữ bao nhiêu thông tin cho tầng phân lớp
 
@@ -369,4 +369,4 @@ FedMix tốn gấp khoảng hai lần rưỡi FedAvg, chủ yếu do phải lấ
 | Bảng 5.9, cột "Công bố" | `paper/ref/Guo et al. - 2023 - FedBR….pdf`, Bảng 1, cột CIFAR10 (VGG11) |
 | Bảng 5.11, Hình 5.1 | `C:\Users\KietVu\Testplace\FedBR\output\cifar10\02_attempt_20260916\calibrate_head_lda2000\*.json` ($M = 1, 2$) và `…\calibrate_head_lda2000_M3-10\*.json` ($M = 3, 5, 10$), trường `baseline.local` và `rows[].delta.local`; sinh bằng `make calibrate-head OUT=… CALIB_ARGS="--M … --n_per_client 2000 --method lda --eval_envs local"`. Hai kiểm tra bổ sung: `…\calibrate_head\` (200 mẫu/client, CE và LDA, cả global) và `…\calibrate_head_ce_lr01\`. Bảng tổng hợp ở `INDEX` §5.2b. Hình: `figures/hinh5_1.py` |
 | Bảng 5.12 | cùng `summary.csv`, cột `h/1000rd` |
-| Port FedBR lên Flower | kho Flower `runs/paper_{fedavg,fedbr}_rot{,_noaug}_r500/` |
+| ~~Port FedBR lên Flower~~ | **không dùng** (học viên, 26/09): bản cài FedBR trên nền tảng Flower chưa được xác nhận khớp với FedBR gốc, nên số liệu của nó có thể sai lệch vì cài đặt. Thư mục gốc để tra: kho Flower `runs/paper_{fedavg,fedbr}_rot{,_noaug}_r500/` |

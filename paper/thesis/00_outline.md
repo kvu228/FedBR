@@ -130,7 +130,7 @@ Kế thừa từ dàn bài cũ (bản gốc ở `archive/…/00_outline.md` §2)
 | Bảng tái hiện CIFAR-10 của FedBR, 9 thuật toán, 1000 vòng | FedBR | **1** (seed 12345) | Ch.5 mục 5.3.1, 5.3.2 | **đã viết** (26/09) |
 | Danh mục kiểm toán mã FedBR D1–D13, cộng phép chuẩn hoá $1/B$ | FedBR | — | **Phụ lục A** (`07_phu-luc.md`) | bản nháp ở `archive/…/05_chuong5.md` §5.2.2–5.2.6 |
 | Hiệu chuẩn tầng phân lớp bằng mẫu trung bình, quét $M$ (LDA, 2000 mẫu/client) | FedBR | 1 | Ch.5 mục 5.3.3 | **đã viết** (26/09); số liệu `INDEX` §5.2b |
-| Port FedBR lên Flower: FedBR ≈ FedAvg (−0,24; +0,86) | Flower | 1 | Ch.5 mục 5.3.2, một đoạn mức cơ chế | ý đã ghi, đoạn còn `[VIẾT]` |
+| ~~Port FedBR lên Flower: FedBR ≈ FedAvg (−0,24; +0,86)~~ | Flower | 1 | **không dùng** | học viên 26/09: bản cài FedBR bên kho Flower chưa được xác nhận khớp FedBR gốc |
 
 **Đối chiếu bảng tái hiện với bài FedBR** (Bảng 1 của bài, CIFAR-10, VGG11; `02_attempt` dùng chỉ số local top-5 của cùng bài):
 
@@ -219,7 +219,6 @@ Các thiết kế của hướng cũ **không mang sang** hướng B: cấu hìn
   - 5.3.1 tái hiện bảng CIFAR-10 của bài FedBR (`02_attempt`, Bảng 5.9);
   - 5.3.2 FedBR (S1), FedMix (S2), FedBR + Mixup, FedProx, FedAvg + Mixup (Bảng 5.10); NaiveMix chờ T1 nếu chạy; không có FedMix bản sửa;
   - 5.3.3 mẫu trung bình còn giữ bao nhiêu thông tin cho tầng phân lớp: phép chẩn đoán, quét $M$ (Bảng 5.11, Hình 5.1). Kiểm toán mã chuyển sang Phụ lục A;
-  - một đoạn mức cơ chế về FedBR chạy trên nền tảng Flower (trong 5.3.2).
 - **5.4 Chi phí tài nguyên** `[SỬA]`: thời gian mỗi 1000 vòng (Bảng 5.12; cột bộ nhớ trong `summary.csv` chưa dùng được), chi phí truyền thông theo (4.1).
 - *(5.5 — chỉ khi A có số liệu)* FedBR cộng số hạng Taylor `[CHẠY: T2]`.
 - **5.6 Tổng hợp và thảo luận** `[CHẠY]`: trả lời RQ1–RQ4, mỗi câu một đoạn kèm điều kiện hiệu lực; threats to validity.
