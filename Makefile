@@ -145,6 +145,7 @@ help:
 	@echo "Reporting"
 	@echo "  summarize          accuracy / rounds-to-threshold table (+ CSV)"
 	@echo "  figures            convergence curves"
+	@echo "  calibrate-head     retrain each run's classifier on mean samples (thesis probe)"
 	@echo ""
 	@echo "Runs that already wrote a 'done' marker are skipped, so a target"
 	@echo "that dies part way can simply be re-run. FORCE=1 redoes them."
@@ -393,6 +394,17 @@ SUMMARIZE_ARGS ?= --threshold 55 60
 summarize:
 	@$(PY) -m fedbr.scripts.summarize $(OUT) $(SUMMARIZE_ARGS) \
 	  --csv $(OUT)/summary.csv
+
+# Post-hoc classifier calibration on mean samples (thesis probe): retrain the
+# head of every finished run under OUT on features of mean samples, sweeping
+# M. Needs no training. CALIB_ARGS passes options through, e.g.
+#   make calibrate-head OUT=./output/cifar10/02_attempt_20260916 CALIB_ARGS="--M 1 2 5 10 --n_per_client 200"
+CALIB_ARGS ?=
+.PHONY: calibrate-head
+calibrate-head:
+	@$(PY) -m fedbr.scripts.calibrate_head $(OUT) \
+	  --cache_dir $(CACHE_DIR) --data_dir $(DATA_DIR) --device $(DEVICE) \
+	  --out_dir $(OUT)/calibrate_head $(CALIB_ARGS)
 
 figures:
 	@mkdir -p $(FIGURES)
