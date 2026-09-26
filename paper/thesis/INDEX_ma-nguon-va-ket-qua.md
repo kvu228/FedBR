@@ -183,6 +183,7 @@ Vị trí mã chính đã có ở `00_outline.md` §3.1. Bổ sung:
 - `fedbr/scripts/summarize.py:87–131`: chỉ số = trung bình top-$k$ vòng (`--top_k 5`); `--metric local` = tập giữ lại 20% của client (`env00..09_out`, chỉ số của bài FedBR); `--metric global` = 10 tập kiểm tra góc cố định (`env10..19_in`).
 - `fedbr/scripts/eval_checkpoint.py`: chấm lại `model.pkl` (vòng cuối) trên mọi env/split.
 - **Hướng A (26/09):** lớp `FedBRTaylor` ngay sau lớp `FedBR` trong `fedbr/algorithms.py` (kế thừa `FedBR`, ghi đè `update`; số hạng (III) ở `_taylor_from_loss`, chuẩn hoá theo công thức, không thừa $1/B$); hparam ở `fedbr/hparams_registry.py` khối `if algorithm == 'FedBRTaylor'`; pseudo-data có nhãn dựng một lần ở nhánh `if args.algorithm == 'FedBRTaylor'` trong `train_fed.py` (gọi `get_augmentation_fedmix_data`, cùng thứ tự rút ngẫu nhiên với `get_augmentation_mean_data` nên ảnh trùng với FedBR ở cùng hạt giống); test `fedbr/test/test_fedbr_taylor.py`; target `run-fedbr-taylor`, `t2` trong `Makefile`. Thư mục kết quả: `fedbr-taylor-<soft|uniform>[-noiii]`.
+- **Thăm dò hiệu chuẩn tầng phân lớp bằng mẫu trung bình (26/09):** `fedbr/scripts/calibrate_head.py` (`make calibrate-head OUT=<thư mục chạy>`). Đóng băng $\phi$ của `model.pkl`, dựng $n_V$ mẫu trung bình mỗi client với $M$ ảnh và nhãn mềm, huấn luyện lại riêng $\omega$ (CE nhãn mềm, hoặc LDA dạng đóng với co hiệp phương sai 0,01 như `[FL]/src/calibration/head_methods.py:53–76`), chấm local và global trước/sau theo $M$; $M = 1$ là trần chia sẻ ảnh thô. Kết quả JSON ở `<OUT>/calibrate_head/<run>.json`. Test: `fedbr/test/test_calibrate_head.py`. Đây là cách dùng thứ tư của mẫu trung bình (sau huấn luyện), chưa có trong Bảng 4.1; chỉ đưa vào luận văn nếu thăm dò trên `02_attempt` cho tín hiệu.
 - Bố cục thư mục kết quả: `REPRODUCE.md` §8.
 
 ### 5.2. `output/cifar10/` — kết quả
@@ -215,6 +216,33 @@ Kèm `cifar10_convergence.png`. FedBR và FedProx cho số Global giống hệt 
 - FedMix ở đây chạy $\lambda = 0{,}1$ với số hạng Taylor thu nhỏ 32 lần (F1).
 - Môi trường 0° còn lỗi `if not angle` (T12 chưa sửa trong lần chạy này).
 - Đây là thư mục **không có mặt trong git**. Nhắc tới nó thì ghi đường dẫn đầy đủ theo IR#8.
+
+### 5.2b. `02_attempt_20260916/calibrate_head*` — hiệu chuẩn tầng phân lớp sau huấn luyện bằng mẫu trung bình (26/09)
+
+Chạy `fedbr/scripts/calibrate_head.py` trên `model.pkl` (mô hình **vòng cuối**, không phải top-5) của cả 9 thuật toán; bộ trích xuất đóng băng; local = trung bình 10 tập giữ lại của client (chỉ số của bài), global = 10 tập kiểm tra góc cố định. Một hạt giống (12345 cho mô hình, 0 cho phép rút mẫu trung bình).
+
+| Thư mục | Cấu hình | Dùng cho |
+|---|---|---|
+| `calibrate_head/` | $M \in \{1,2,3,5,10\}$, 200 mẫu/client, CE (lr 0,001, 10 epoch) và LDA, local + global | LDA ở đây thiếu mẫu (200/lớp cho $d=512$), chỉ dùng cột CE |
+| `calibrate_head_ce_lr01/` | $M \in \{1,2\}$, 200 mẫu/client, CE lr 0,01, 30 epoch, local | kiểm tra trần CE không bị lr kìm |
+| `calibrate_head_lda2000/` | $M \in \{1,2\}$, **2000 mẫu/client**, LDA, local | **Hình 5.1, Bảng 5.10** |
+| `calibrate_head_lda2000_M3-10/` | $M \in \{3,5,10\}$, 2000 mẫu/client, LDA, local | **Hình 5.1, Bảng 5.10** |
+
+Hiệu local (điểm phần trăm) so với trước hiệu chuẩn, LDA, 2000 mẫu/client:
+
+| Run | Trước | M=1 | M=2 | M=3 | M=5 | M=10 |
+|---|---|---|---|---|---|---|
+| fedavg | 55,98 | +5,83 | +3,27 | −1,60 | −7,81 | −16,39 |
+| fedprox | 56,94 | +4,12 | +1,97 | −2,46 | −9,24 | −16,51 |
+| groupdro | 57,54 | +3,94 | +2,09 | −1,33 | −6,73 | −14,12 |
+| dann | 55,14 | +4,52 | +1,85 | −2,34 | −8,47 | −14,02 |
+| fedmix | 57,21 | +4,84 | +2,51 | −3,38 | −12,48 | −25,33 |
+| mixup | 59,83 | +1,03 | −0,16 | −3,66 | −8,59 | −13,89 |
+| fedbr | 65,92 | +1,34 | −0,19 | −6,02 | −17,58 | −54,46 |
+| fedbr-mixup | 65,64 | +1,73 | +0,96 | −2,64 | −12,30 | −46,23 |
+| moon | 46,61 | +10,95 | +8,68 | +3,24 | −5,04 | −12,96 |
+
+CE 200 mẫu/client ở $M=1$ (cột đối chiếu): fedavg +4,60 · fedprox +3,19 · groupdro +2,95 · dann +2,19 · fedmix +1,40 · mixup +0,50 · fedbr +0,57 · fedbr-mixup +1,50 · moon +7,45. Tái tính: mỗi `*.json` có `baseline` và `rows[].delta`. Hình: `paper/thesis/figures/hinh5_1.py` đọc thẳng các JSON này.
 
 ### 5.3. `[FL]/src/fedbr_repro/` — bản chép lại `[BR]`, dùng để đối chiếu kiểm toán
 

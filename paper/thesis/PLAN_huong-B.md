@@ -2,6 +2,8 @@
 
 **Lập:** 24/09/2026 · **Thay thế:** `archive/2026-09-24_huong-bien-gioi-hieu-luc/PLAN_ke-hoach-8-tuan.md` · **Nguyên tắc:** chạy theo thứ tự T0 → T1 → T2. Không bắt đầu mức sau khi mức trước chưa có đủ số liệu.
 
+> **Cập nhật 26/09 (học viên):** T0 **bỏ**, nền tảng FedBR chỉ dùng hạt giống 12345 vì mỗi lượt FedBR 1000 vòng mất khoảng 7,5 giờ. T2 (hướng A) đang chạy trên Vast, một hạt giống. T1 chỉ còn NaiveMix, tuỳ chọn. Các mục dưới về T0 và mốc "Sau T0" giữ làm lịch sử; cách đọc kết quả một hạt giống ở Ch.5 mục 5.1.3 và dàn bài IR#5.
+
 ---
 
 ## 1. Ba mức

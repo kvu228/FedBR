@@ -6,17 +6,23 @@
 > |---|---|---|
 > | 5.1 Thiết lập | `[ĐÃ VIẾT]` 25/09 — nhận toàn bộ mục 4.5 cũ của Ch.4 (Bảng 4.2 → 5.1, Bảng 4.3 → 5.3), phần "đọc các phép so sánh" của mục 4.2.4 cũ, và chỗ thiết lập đi khác khung; thêm Bảng 5.2 cấu hình nền tảng FedBR lấy từ `args`/`hparams` của `02_attempt` | — |
 > | 5.2 Flower, lệch nhãn | `[ĐÃ VIẾT]` — mang sang từ `archive/…/05_chuong5.md` (khối 24/09) | — |
-> | 5.3.1 Tái hiện bảng FedBR | `[BẢN NHÁP, n = 1]` — số liệu `02_attempt`; bổ sung hạt giống khi T0 xong | T0 |
-> | 5.3.2 So sánh các cách dùng mẫu trung bình | `[CHỜ SỐ LIỆU]` — danh sách hàng đã sửa theo H1/H2 và quyết định không sửa mã | T0, T1 |
+> | 5.3.1 Tái hiện bảng FedBR | `[ĐÃ VIẾT]` 26/09 — một hạt giống (12345) là số liệu cuối cùng của nền tảng FedBR | — |
+> | 5.3.2 So sánh các cách dùng mẫu trung bình | `[ĐÃ VIẾT]` 26/09 — Bảng 5.10 từ `02_attempt`, cả chỉ số chính lẫn năm mốc cuối; hàng NaiveMix chờ T1 nếu chạy | T1 (tuỳ chọn) |
 > | ~~5.3.3 Kiểm toán mã FedBR~~ | chuyển sang **Phụ lục A** (`07_phu-luc.md`), 25/09 | — |
-> | 5.4 Chi phí tài nguyên | `[BẢN NHÁP, n = 1]` | T0 |
+> | **5.3.3 Mẫu trung bình còn giữ bao nhiêu thông tin cho tầng phân lớp** | `[ĐÃ VIẾT]` 26/09 — đặt thành **phép chẩn đoán**, không gọi là cách dùng thứ tư, nên Ch.4 (Bảng 4.1, Thuật toán 4.1, Hình 4.1) không phải sửa; Bảng 5.11, Hình 5.1 | — |
+> | 5.4 Chi phí tài nguyên | `[BẢN NHÁP]` — còn thiếu loại GPU | — |
 > | 5.5 FedBR + Taylor | chỉ khi A có số liệu | T2 |
 > | 5.6 Tổng hợp | `[CHỜ SỐ LIỆU]` | tất cả |
 >
-> **Đánh số bảng (đánh lại 25/09):** Bảng 5.1–5.3 thuộc mục 5.1; Bảng 5.4–5.8 thuộc mục 5.2 (trước là 5.1–5.5); Bảng 5.9 thuộc 5.3.1 và Bảng 5.10 thuộc 5.4 (trước là 5.6 và 5.7).
+> **Đánh số bảng (đánh lại 26/09, lượt 2):** Bảng 5.1–5.3 thuộc mục 5.1; Bảng 5.4–5.8 thuộc mục 5.2; Bảng 5.9 thuộc 5.3.1; **Bảng 5.10 thuộc 5.3.2 (mới)**; Bảng 5.11 và Hình 5.1 thuộc 5.3.3; Bảng 5.12 thuộc 5.4.
 >
-> **Còn chờ học viên chốt `[QUYẾT]`:**
-> - họ giả thuyết ở mục 5.1.4 phải chốt **trước khi chạy T0**;
+> **Quyết định 26/09 (học viên): nền tảng FedBR chỉ dùng hạt giống 12345.** Mỗi lượt FedBR 1000 vòng mất khoảng 7,5 giờ, không đủ thời gian cho ba hạt giống; **T0 bỏ**. Nền tảng Flower giữ ba hạt giống. Hệ quả trong chương này:
+> - 5.1.3 viết lại: Flower dùng khoảng tin cậy trên ba hạt giống; FedBR dùng **ngưỡng đọc 3 điểm phần trăm**, lấy từ chênh lệch giữa lượt chạy lại và bảng công bố ở Bảng 5.9;
+> - 5.1.4 bỏ kiểm định t và Holm (không làm được với một hạt giống); H1/H2 thành hai phép so sánh chính S1/S2 đọc theo ngưỡng;
+> - 5.3.1, 5.3.2 viết xong từ `02_attempt`; 5.3.3 không còn chờ thêm hạt giống;
+> - T2 (hướng A) đang chạy trên Vast, cũng một hạt giống; thân chương chưa nhắc A.
+>
+> ⚠️ **Ch.1 và Ch.2 trong Word** còn vài câu nói "ba hạt giống" hoặc "khoảng tin cậy" chung cho mọi so sánh (1.2.1, 1.2.3, 1.3 đóng góp 2; 2.4.4 đóng góp 1–2). Học viên chọn không rà hai chương này ở lượt 26/09; khi rà lại thì sửa theo mục 5.1.3.
 >
 > **Sửa 25/09 trong thân chương:**
 > - 5.2.2 bỏ câu hứa đo số hạng Taylor đúng biên độ ở 5.3.2, vì không sửa mã nên không có bản sửa;
@@ -78,7 +84,7 @@ Bảng 5.2 ghi đầy đủ cấu hình của nền tảng FedBR. Cấu hình gi
 | Đánh giá | mỗi 5 vòng |
 | NaiveMix, FedMix | $\lambda = 0{,}1$; mỗi bước cục bộ nhận 32 mẫu trung bình mới, mỗi mẫu là trung bình của 10 ảnh; FedMix chuẩn hoá số hạng Taylor theo cách nêu ở Chương 4, mục 4.3 |
 | FedBR | 32 pseudo-sample dựng một lần trước huấn luyện, mỗi mẫu là trung bình của 10 ảnh; $\tau_1 = \tau_2 = 2$, $\mu = 0{,}5$, $\gamma = 1{,}0$ (trọng số của $L_{\text{bal}}$ trong (3.19)); tầng chiếu là MLP $d \to 2d \to d$ |
-| Hạt giống | 12345, 23456, 34567 |
+| Hạt giống | 12345, cho mọi thuật toán (mục 5.1.3) |
 
 Bảng 5.2 cho thấy một chỗ thiết lập đi khác khung ở Chương 4. Trong khung, tập mẫu trung bình dựng một lần trước huấn luyện, và FedBR làm đúng như vậy. NaiveMix và FedMix thì nhận một lô 32 mẫu trung bình mới ở mỗi bước cục bộ, dựng thẳng từ dữ liệu của mọi client. Cách làm này chỉ thực hiện được trong mô phỏng, nơi dữ liệu của mọi client nằm trên cùng một máy. Luận văn giữ nó để kết quả so được với bảng công bố của [2]. Hệ quả là trong suốt quá trình huấn luyện, NaiveMix và FedMix thấy nhiều mẫu trung bình khác nhau hơn hẳn FedBR; Chương 6 nêu điểm này trong phần hạn chế.
 
@@ -86,34 +92,34 @@ Bảng 5.2 cho thấy một chỗ thiết lập đi khác khung ở Chương 4. 
 
 Trên nền tảng FedBR, chỉ số chính là chỉ số của bài báo FedBR: trung bình năm độ chính xác cao nhất theo vòng, đo trên phần dữ liệu giữ lại của các client. Dùng chỉ số này thì bảng tái hiện so được với bảng công bố.
 
-Chỉ số này có một nhược điểm: năm mốc được chọn theo chính độ chính xác trên tập đánh giá, nên giá trị bị kéo lên. Độ thiên tác động lên mọi phương pháp, nhưng không nhất thiết như nhau; phương pháp có đường học dao động mạnh hơn được lợi nhiều hơn. Vì vậy, với các phép so sánh thuộc họ giả thuyết chính, luận văn báo cáo kèm trung bình năm mốc đánh giá cuối cùng, một chỉ số không chọn theo tập đánh giá. Nếu hai chỉ số cho hiệu trái dấu nhau, điều đó được báo cáo cùng kết quả.
+Chỉ số này có một nhược điểm: năm mốc được chọn theo chính độ chính xác trên tập đánh giá, nên giá trị bị kéo lên. Độ thiên tác động lên mọi phương pháp, nhưng không nhất thiết như nhau; phương pháp có đường học dao động mạnh hơn được lợi nhiều hơn. Vì vậy, với các phép so sánh chính ở Bảng 5.3, luận văn báo cáo kèm trung bình năm mốc đánh giá cuối cùng, một chỉ số không chọn theo tập đánh giá. Nếu hai chỉ số cho hiệu trái dấu nhau, điều đó được báo cáo cùng kết quả.
 
 Ở mỗi mốc đánh giá, nền tảng FedBR ghi độ chính xác trên phần dữ liệu giữ lại của từng client, độ chính xác trên mười tập kiểm tra xoay góc cố định, thời gian mỗi bước và toàn bộ cấu hình siêu tham số. Nhật ký không ghi độ chính xác theo từng lớp, cũng không ghi chuẩn của các vector trọng số theo lớp. Phân tích dạng thiên lệch của tầng phân lớp, tức mục tiêu cụ thể thứ tư, vì vậy chỉ thực hiện trên nền tảng Flower, ở mục 5.2.4.
 
 Với phương pháp có tham số ngân sách, như số đặc trưng ảo mỗi lớp của CCVR, mọi con số được báo cáo kèm ngân sách tại đó nó được đo. Mục 5.2.3 cho thấy vì sao quy tắc này cần thiết.
 
-### 5.1.3. So sánh theo cặp và cỡ mẫu
+### 5.1.3. So sánh theo cặp và số hạt giống
 
-Mọi mức cải thiện được tính theo cặp. Hai cấu hình đem so dùng cùng một hạt giống, và hạt giống quyết định cùng lúc lần rút phân hoạch dữ liệu, trọng số khởi tạo và thứ tự các lô. Lịch học và số vòng cũng như nhau. Với mỗi hạt giống, hiệu độ chính xác giữa hai cấu hình là một quan sát; khoảng tin cậy được tính trên các quan sát đó. Cách làm này loại khỏi phép so sánh phần phương sai do phân hoạch dữ liệu, vốn lớn trong học liên kết mô phỏng.
+Mọi mức cải thiện được tính theo cặp. Hai cấu hình đem so dùng cùng một hạt giống, và hạt giống quyết định cùng lúc lần rút phân hoạch dữ liệu, trọng số khởi tạo và thứ tự các lô. Lịch học và số vòng cũng như nhau. Cách làm này loại khỏi phép so sánh phần phương sai do phân hoạch dữ liệu, vốn lớn trong học liên kết mô phỏng.
 
-Mỗi cấu hình trong phép so sánh chính chạy với ba hạt giống. Để định cỡ, luận văn lấy độ lệch chuẩn của hiệu theo cặp là $s \approx 1{,}2$ điểm phần trăm. Trên nền tảng Flower, độ lệch chuẩn của các hiệu theo cặp ở mục 5.2 phần lớn nằm trong khoảng 0,79 đến 1,37 điểm, và 1,2 gần đầu trên của khoảng đó.
+Hai nền tảng có số hạt giống khác nhau. Trên nền tảng Flower, mỗi cấu hình chạy với ba hạt giống; mỗi hạt giống cho một hiệu theo cặp, và khoảng tin cậy được tính trên ba hiệu đó. Với $n = 3$ thì $t_{0{,}975;\,2} = 4{,}303$, nên ở độ lệch chuẩn của hiệu cỡ 1,2 điểm phần trăm, nửa rộng khoảng tin cậy 95% là $4{,}303 \times 1{,}2 / \sqrt{3} \approx 2{,}98$ điểm. Khi khoảng tin cậy chứa không, luận văn nói thẳng là phép đo không phân giải được hiệu đó, và không diễn giải kết quả ấy thành bằng chứng rằng hai phương pháp tương đương.
 
-Với $n = 3$ và $t_{0{,}975;\,2} = 4{,}303$, nửa rộng khoảng tin cậy 95% của trung bình hiệu là $4{,}303 \times 1{,}2 / \sqrt{3} \approx 2{,}98$ điểm phần trăm. Một hiệu nhỏ hơn khoảng ba điểm vì vậy không phân biệt được với không, và chỉ được báo cáo dưới dạng khoảng. Khi khoảng tin cậy chứa không, luận văn nói thẳng là phép đo không phân giải được hiệu đó. Luận văn không diễn giải kết quả ấy thành bằng chứng rằng hai phương pháp tương đương, vì một kiểm định không có ý nghĩa thống kê không chứng minh giả thuyết không.
+Trên nền tảng FedBR, mỗi thuật toán chỉ chạy một lần, với hạt giống 12345. Một lượt FedBR 1000 vòng mất khoảng 7,5 giờ tính toán (Bảng 5.12), và thời gian của luận văn không đủ cho ba hạt giống ở mọi thuật toán. Không có lần chạy lặp thì không ước lượng được độ dao động giữa các hạt giống, nên các hiệu trên nền tảng này không có khoảng tin cậy.
 
-Giá trị $s$ lấy từ nền tảng Flower và chỉ dùng để định cỡ. Độ lệch chuẩn thật trên nền tảng FedBR được ước lượng từ chính ba hạt giống và báo cáo ở mục 5.3.
+Thay vào đó, luận văn dùng một thước đo thô lấy từ chính nền tảng này. Bảng 5.9 đặt lượt chạy lại cạnh bảng công bố của [2] cho cùng cấu hình. Bỏ Moon, thuật toán mang một lỗi đã biết, chênh lệch giữa hai bên nằm trong khoảng −2,69 đến +2,66 điểm. Chênh lệch này gộp cả dao động giữa các lần chạy lẫn khác biệt môi trường, nên nó chỉ cho biết cỡ của dao động. Quy tắc đọc vì vậy như sau: trên nền tảng FedBR, một hiệu theo cặp nhỏ hơn 3 điểm phần trăm không được diễn giải thành khác biệt giữa hai phương pháp; một hiệu từ 3 điểm trở lên được báo cáo như một quan sát đơn lẻ, và được đối chiếu chiều với bảng công bố của [2]. Ngưỡng này cùng cỡ với nửa rộng khoảng tin cậy của nền tảng Flower.
 
-### 5.1.4. Họ giả thuyết chính
+### 5.1.4. Các phép so sánh chính
 
-Để kiểm soát so sánh bội, luận văn khai báo trước một họ giả thuyết chính gồm hai phép so sánh trên nền tảng FedBR, ở cấu hình của Bảng 5.2 (Bảng 5.3). Giá trị $\lambda = 0{,}1$ là mặc định trong thiết lập của [2] và được chốt trước khi chạy.
+Luận văn khai báo trước hai phép so sánh chính trên nền tảng FedBR, ở cấu hình của Bảng 5.2 (Bảng 5.3). Giá trị $\lambda = 0{,}1$ là mặc định trong thiết lập của [2] và được chốt trước khi chạy. Vì nền tảng này chỉ có một hạt giống, hai phép so sánh được đọc theo quy tắc ở mục 5.1.3, không qua kiểm định thống kê.
 
-**Bảng 5.3.** Họ giả thuyết chính. Mỗi giả thuyết được kiểm định bằng phép kiểm định t theo cặp hai phía trên ba hạt giống; cả họ hiệu chỉnh theo thủ tục Holm ở mức 5%. FedMix dùng cách chuẩn hoá số hạng Taylor nêu ở Chương 4, mục 4.3.
+**Bảng 5.3.** Hai phép so sánh chính trên nền tảng FedBR. $\mathrm{Acc}$ là độ chính xác theo chỉ số chính của mục 5.1.2, báo cáo kèm trung bình năm mốc đánh giá cuối. Một hạt giống (12345). FedMix dùng cách chuẩn hoá số hạng Taylor nêu ở Chương 4, mục 4.3.
 
-| | Giả thuyết không |
-|---|---|
-| H1 | $\mathrm{Acc}_{\text{FedBR}} - \mathrm{Acc}_{\text{FedAvg}} = 0$ |
-| H2 | $\mathrm{Acc}_{\text{FedMix}} - \mathrm{Acc}_{\text{FedAvg}} = 0$ |
+| | Hiệu theo cặp | Cách đọc |
+|---|---|---|
+| S1 | $\mathrm{Acc}_{\text{FedBR}} - \mathrm{Acc}_{\text{FedAvg}}$ | dưới 3 điểm: không phân biệt được; từ 3 điểm trở lên: quan sát đơn lẻ, đối chiếu chiều với Bảng 1 của [2] |
+| S2 | $\mathrm{Acc}_{\text{FedMix}} - \mathrm{Acc}_{\text{FedAvg}}$ | như S1 |
 
-Mọi phép so sánh khác mang nhãn thăm dò và không tham gia hiệu chỉnh: FedProx, NaiveMix, FedBR + Mixup, hiệu FedMix − NaiveMix, và các thuật toán chỉ có trong bảng tái hiện một hạt giống.
+Mọi phép so sánh khác mang nhãn thăm dò: FedProx, NaiveMix, FedBR + Mixup, hiệu FedMix − NaiveMix, và các thuật toán chỉ có trong bảng tái hiện.
 
 Hai phép so sánh giữa các cách dùng mẫu trung bình cần được đọc đúng phạm vi. FedMix và NaiveMix nhận cùng mẫu trung bình, cùng nhãn mềm và cùng trọng số trộn, nhưng khác nhau ở hai chỗ cùng lúc: điểm đánh giá hàm mất mát, và sự có mặt của số hạng gradient. Hiệu giữa chúng vì vậy so hai cách dùng cùng một thông tin, và không quy riêng được cho số hạng Taylor. Việc dùng chung một trọng số trộn vẫn loại được một nguồn nhiễu có thật trong bài báo FedMix [1]. Ở bảng kết quả chính của bài báo đó, NaiveMix đạt 77,4% và FedMix 81,2% trên CIFAR-10; trong phép quét trọng số trộn ở phụ lục, giá trị tốt nhất của NaiveMix là 80,6%, chỉ còn cách FedMix 0,6 điểm.
 
@@ -246,7 +252,7 @@ Gốc đường dẫn: `C:\Users\KietVu\Testplace\uit-msc-dp-adaptive-fedmix\`. 
 
 Bảng 5.9 đặt kết quả chạy lại trên nền tảng FedBR cạnh bảng CIFAR-10 của bài báo FedBR [2]. Cấu hình theo Bảng 5.2, chỉ số theo mục 5.1.2.
 
-Lượt chạy này chỉ có một hạt giống, nên bảng dùng để đối chiếu với con số đã công bố, không dùng để so các thuật toán với nhau.
+Như mọi kết quả trên nền tảng này, bảng đến từ một hạt giống. Bảng có hai vai trò: đối chiếu với con số đã công bố, và cho thước đo dao động mà mục 5.1.3 dùng để đọc các phép so sánh.
 
 **Bảng 5.9.** Độ chính xác (%) trên CIFAR-10 xoay, 10 client, 1000 vòng, VGG11 không chuẩn hoá ($d = 512$). Cột thứ hai là giá trị công bố trong Bảng 1 của [2]; cột thứ ba là lượt chạy lại trên nền tảng FedBR với hạt giống 12345. Chỉ số của cả hai cột là trung bình năm độ chính xác cao nhất theo vòng trên phần dữ liệu giữ lại của các client. FedMix chạy với $\lambda = 0{,}1$ và cách chuẩn hoá ở Chương 4, mục 4.3, tức số hạng Taylor nhỏ hơn (3.15) 32 lần.
 
@@ -262,27 +268,76 @@ Lượt chạy này chỉ có một hạt giống, nên bảng dùng để đố
 | FedMix | 57,37 | 57,16 | −0,21 |
 | FedBR + Mixup | 65,32 | 66,47 | +1,15 |
 
-Sáu trong chín thuật toán cho kết quả cách giá trị công bố không quá 1,2 điểm. Moon thấp hơn 5,28 điểm. Đây là thuật toán mang một lỗi trong danh mục kiểm toán ở Phụ lục A: mô hình cục bộ của vòng trước, thứ mà hàm mất mát tương phản của Moon cần, không bao giờ được cập nhật. DANN thấp hơn 2,69 điểm và GroupDRO cao hơn 2,66 điểm; luận văn không tìm nguyên nhân của hai chênh lệch này.
+Sáu trong chín thuật toán cho kết quả cách giá trị công bố không quá 1,2 điểm. Moon thấp hơn 5,28 điểm. Đây là thuật toán mang một lỗi trong danh mục kiểm toán ở Phụ lục A: mô hình cục bộ của vòng trước, thứ mà hàm mất mát tương phản của Moon cần, không bao giờ được cập nhật. DANN thấp hơn 2,69 điểm và GroupDRO cao hơn 2,66 điểm; luận văn không tìm nguyên nhân của hai chênh lệch này, và dùng chúng để đặt ngưỡng đọc ba điểm ở mục 5.1.3.
 
-`[CHỜ SỐ LIỆU: T0]` Khi có ba hạt giống, bổ sung trung bình và độ lệch chuẩn cho FedAvg, FedProx, FedMix, FedBR, FedBR + Mixup, rồi thay câu *"Lượt chạy này chỉ có một hạt giống…"*.
 
 ### 5.3.2. Các cách dùng mẫu trung bình
 
-`[CHỜ SỐ LIỆU: T0, T1]` Bảng hiệu theo cặp so với FedAvg, $n = 3$, khoảng tin cậy 95%, kèm kết quả kiểm định H1, H2 của Bảng 5.3 sau hiệu chỉnh Holm. Các hàng:
-- FedBR (H1);
-- FedMix (H2), chuẩn hoá theo Chương 4, mục 4.3;
-- NaiveMix (thăm dò, cần T1);
-- FedBR + Mixup, FedProx (thăm dò).
+Bảng 5.10 đặt các cách dùng mẫu trung bình cạnh FedAvg và FedProx, trên cùng lượt chạy của Bảng 5.9.
 
-Kèm một dòng hiệu FedMix − NaiveMix (thăm dò), đọc theo mục 5.1.4. Ghi cách chuẩn hoá ở mọi hàng FedMix (IR#12). Không có hàng FedMix sửa chuẩn hoá, vì luận văn không sửa mã (quyết định 24/09).
+**Bảng 5.10.** Hiệu theo cặp so với FedAvg trên nền tảng FedBR (CIFAR-10 xoay, 10 client, 1000 vòng, VGG11 không chuẩn hoá, $d = 512$), hạt giống 12345. "Chỉ số chính" là trung bình năm độ chính xác cao nhất theo vòng; "năm mốc cuối" là trung bình năm mốc đánh giá cuối cùng; cả hai đo trên phần dữ liệu giữ lại của các client, đơn vị %. FedMix và NaiveMix dùng $\lambda = 0{,}1$; FedMix dùng cách chuẩn hoá ở Chương 4, mục 4.3, tức số hạng Taylor nhỏ hơn (3.15) 32 lần. Ngưỡng đọc 3 điểm theo mục 5.1.3.
 
-Một đoạn mức cơ chế về bản port FedBR lên nền tảng Flower: FedBR 57,26% so với FedAvg 57,49% (có augment), 56,04% so với 55,18% (không augment), một hạt giống, 500 vòng. Lợi thế của FedBR **không** lặp lại trên nền tảng đó. Nguồn: `INDEX` §4.3 và `docs/FEDBR_PORT_DESIGN.md` §11–13 của kho Flower. Không so con số tuyệt đối với mục 5.3.1 (IR#4).
+| Thuật toán | Chỉ số chính | Hiệu | Năm mốc cuối | Hiệu |
+|---|---|---|---|---|
+| FedAvg | 59,45 | — | 57,70 | — |
+| FedProx | 59,14 | −0,31 | 57,79 | +0,09 |
+| FedAvg + Mixup | 59,44 | −0,01 | 59,08 | +1,38 |
+| FedMix (S2) | 57,16 | −2,29 | 57,12 | −0,58 |
+| NaiveMix | `[CHỜ SỐ LIỆU: T1]` | | | |
+| FedBR (S1) | 65,82 | +6,37 | 65,05 | +7,35 |
+| FedBR + Mixup | 66,47 | +7,02 | 65,88 | +8,18 |
 
-## 5.4. Chi phí tài nguyên — `[BẢN NHÁP, n = 1]`
+S1 vượt ngưỡng đọc ở cả hai chỉ số: FedBR hơn FedAvg 6,37 điểm theo chỉ số chính và 7,35 điểm theo năm mốc cuối. Bảng 1 của [2] cho FedBR hơn FedAvg 5,66 điểm, cùng chiều và cùng cỡ. FedBR + Mixup cho hiệu cùng cỡ với FedBR.
+
+S2 nằm dưới ngưỡng. FedMix kém FedAvg 2,29 điểm theo chỉ số chính, còn [2] báo cáo kém 1,62 điểm. Theo năm mốc cuối, hiệu co lại còn −0,58 điểm: đường học của FedAvg lên đỉnh cao hơn rồi giảm dần về cuối, còn của FedMix gần như phẳng giữa hai chỉ số. Trên nền tảng này, một hạt giống không phân biệt được FedMix với FedAvg; điều đọc được là cả hai chỉ số đều không cho thấy FedMix cải thiện. Trên nền tảng Flower, mục 5.2.2 đã loại trừ khả năng FedMix cải thiện ở cấu hình của nó; hai nền tảng vì vậy không mâu thuẫn nhau ở mức cơ chế.
+
+Hàng NaiveMix chờ lượt chạy T1. Nếu có, hiệu FedMix − NaiveMix được đọc theo mục 5.1.4 và ngưỡng ở mục 5.1.3.
+
+`[VIẾT]` Một đoạn mức cơ chế về FedBR chạy trên nền tảng Flower, theo cấu hình của bài FedBR (10 client, Dirichlet $\alpha = 0{,}1$, xoay, VGG11, lô 32, 50 bước cục bộ), 500 vòng, một hạt giống: hiệu FedBR − FedAvg theo chỉ số chính là −0,23 điểm khi có tăng cường dữ liệu (57,26 so với 57,49) và +0,86 điểm khi không có (56,04 so với 55,18), cả hai dưới ngưỡng. Lợi thế của FedBR không lặp lại ở đó. Nguồn: `INDEX` §4.3. Nêu rõ 500 so với 1000 vòng; không so con số tuyệt đối với Bảng 5.10 (IR#4).
+
+### 5.3.3. Mẫu trung bình còn giữ bao nhiêu thông tin cho tầng phân lớp
+
+Mục 5.2.3 cho thấy, trên nền tảng Flower, huấn luyện lại tầng phân lớp trên thống kê đặc trưng toàn cục là can thiệp cho mức cải thiện lớn nhất. Mục này dùng chính can thiệp đó làm phép đo: huấn luyện lại tầng phân lớp trên mẫu trung bình thì mô hình được lợi hay bị hại, và điều đó đổi thế nào theo số ảnh $M$ gộp trong mỗi mẫu. Câu trả lời cho biết mẫu trung bình còn giữ bao nhiêu thông tin về ranh giới giữa các lớp.
+
+Thủ tục như sau. Lấy mô hình toàn cục ở vòng cuối của mỗi thuật toán trong Bảng 5.9 và đóng băng bộ trích xuất đặc trưng $\phi$. Mỗi client dựng 2000 mẫu trung bình theo (3.11), mỗi mẫu gộp $M$ ảnh rút ngẫu nhiên từ dữ liệu huấn luyện của client đó, kèm nhãn mềm là histogram nhãn của $M$ ảnh ấy. Máy chủ tính đặc trưng $\phi(\bar x)$ của 20 000 mẫu, rồi thay tầng phân lớp $\omega$ bằng bộ phân lớp LDA dạng đóng như ở mục 5.2.3: trung bình theo lớp lấy trọng số theo nhãn mềm, một ma trận hiệp phương sai chung co về $(\mathrm{tr}/d)\,I$ với hệ số 0,01, tiên nghiệm đều. Độ chính xác được đo trên phần dữ liệu giữ lại của các client, tức cùng tập với chỉ số chính của Bảng 5.9, trước và sau khi thay tầng phân lớp. $M$ quét trên $\{1, 2, 3, 5, 10\}$; $M = 1$ là trường hợp chia sẻ ảnh thô và đóng vai trò cận trên, còn $M = 10$ là giá trị mà FedMix và FedBR dùng trong Bảng 5.2.
+
+Lượng dữ liệu được chia sẻ ở đây lớn hơn nhiều so với khung ở Chương 4. Theo (4.1), chiều lên với $N = 10$, $n_V = 2000$, $d_x = 3072$, $C_y = 10$ và 4 byte mỗi giá trị là khoảng 247 MB, trả một lần; mẫu trung bình không phải phát lại cho client, vì máy chủ tự huấn luyện lại tầng phân lớp rồi phát cùng mô hình. Con số này vẫn nhỏ hơn lưu lượng của một vòng truyền thông (khoảng 738 MB, mục 4.4), nhưng lớn gấp nhiều lần tập pseudo-data 32 mẫu của FedBR.
+
+**Bảng 5.11.** Mức thay đổi độ chính xác trên phần dữ liệu giữ lại (điểm phần trăm) khi thay tầng phân lớp của mô hình vòng cuối bằng bộ phân lớp LDA huấn luyện trên 2000 mẫu trung bình mỗi client, theo số ảnh mỗi mẫu $M$. Cột "Trước" là độ chính xác của mô hình vòng cuối trên cùng tập, hạt giống 12345; giá trị này khác cột "Chạy lại" của Bảng 5.9, vốn là trung bình năm vòng cao nhất. Moon mang lỗi nêu ở Phụ lục A, nên hàng của nó chỉ để tham khảo.
+
+| Thuật toán | Trước | $M=1$ | $M=2$ | $M=3$ | $M=5$ | $M=10$ |
+|---|---|---|---|---|---|---|
+| FedAvg | 55,98 | +5,83 | +3,27 | −1,60 | −7,81 | −16,39 |
+| FedProx | 56,94 | +4,12 | +1,97 | −2,46 | −9,24 | −16,51 |
+| GroupDRO | 57,54 | +3,94 | +2,09 | −1,33 | −6,73 | −14,12 |
+| DANN | 55,14 | +4,52 | +1,85 | −2,34 | −8,47 | −14,02 |
+| FedAvg + Mixup | 59,83 | +1,03 | −0,16 | −3,66 | −8,59 | −13,89 |
+| FedMix | 57,21 | +4,84 | +2,51 | −3,38 | −12,48 | −25,33 |
+| FedBR | 65,92 | +1,34 | −0,19 | −6,02 | −17,58 | −54,46 |
+| FedBR + Mixup | 65,64 | +1,73 | +0,96 | −2,64 | −12,30 | −46,23 |
+| Moon | 46,61 | +10,95 | +8,68 | +3,24 | −5,04 | −12,96 |
+
+![Hình 5.1](figures/hinh5_1.png)
+
+**Hình 5.1.** Số liệu của Bảng 5.11 vẽ theo $M$. Bốn đường màu là FedAvg, FedProx, FedMix và FedBR; bốn đường xám liền là GroupDRO, DANN, FedAvg + Mixup và FedBR + Mixup; đường xám đứt là Moon. Ba giá trị tại $M = 10$ nằm dưới trục được ghi ở góc trên bên phải.
+
+Bảng 5.11 cho ba nhận xét.
+
+Thứ nhất, phép lấy trung bình làm mất thông tin hiệu chuẩn rất nhanh. Mức cải thiện chỉ còn dương ở $M \le 2$, chuyển sang âm ở $M = 3$ với mọi thuật toán trừ Moon, và ở $M = 10$ việc hiệu chuẩn làm giảm độ chính xác của mọi mô hình, từ 14 đến 54 điểm. Với ngân sách 2000 mẫu mỗi client, ảnh trung bình của mười ảnh không giữ đủ thông tin để huấn luyện lại tầng phân lớp, trong khi ảnh thô thì đủ. Kết quả này trả lời một phần RQ3: lượng thông tin mà kênh mẫu trung bình còn giữ ở $M = 10$ thấp hơn mức cần cho hiệu chuẩn tầng phân lớp.
+
+Thứ hai, ở cận trên $M = 1$, mức cải thiện tách hai họ thuật toán. Các phương pháp không tác động trực tiếp lên tầng phân lớp trong huấn luyện được từ +3,9 đến +5,8 điểm; FedBR và FedBR + Mixup chỉ được +1,3 và +1,7. Sau khi cả hai được hiệu chuẩn, FedBR đạt 67,26% còn FedAvg đạt 61,81%. Trong khoảng cách 9,9 điểm giữa hai mô hình vòng cuối, khoảng 4,5 điểm biến mất khi cả hai được huấn luyện lại tầng phân lớp trên ảnh thô, còn khoảng 5,4 điểm vẫn giữ nguyên. Cả hai phần đều vượt ngưỡng đọc ở mục 5.1.3. Điều này phù hợp với vai trò của $L_{\text{bal}}$ trong (3.19): thành phần cân bằng tầng phân lớp của FedBR đã làm trong lúc huấn luyện phần việc mà hiệu chuẩn sau huấn luyện làm cho FedAvg.
+
+Thứ ba, chính FedBR sụt mạnh nhất ở $M = 10$. Thành phần tương phản (3.17) của FedBR kéo đặc trưng của pseudo-data, vốn là ảnh trung bình mười ảnh, ra xa đặc trưng của ảnh thật cục bộ. Bộ trích xuất của FedBR vì vậy đặt ảnh trung bình $M = 10$ vào một vùng đặc trưng cách biệt với ảnh thật, và một tầng phân lớp học trên vùng đó không chuyển được sang ảnh thật. Đây là suy luận từ cấu trúc hàm mất mát, chưa được đo trực tiếp.
+
+Hai kiểm tra bổ sung được chạy để loại trừ cách giải thích khác. Với 200 mẫu mỗi client, tức 200 mẫu cho mỗi lớp trong không gian $d = 512$ chiều, bộ phân lớp LDA thua mô hình gốc ở mọi $M$; đây là chế độ mẫu hữu hạn mà mục 3.6 mô tả, và tỉ số $M_c/d$ nhỏ hơn mười lần so với mục 5.2.3. Huấn luyện lại tầng phân lớp bằng cross-entropy với nhãn mềm, ở hai cấu hình tốc độ học, cho cùng thứ tự các thuật toán tại $M = 1$ với biên độ nhỏ hơn LDA (FedAvg +4,6, FedBR +0,6) và cùng chiều giảm theo $M$.
+
+Mọi số ở mục này đến từ hạt giống 12345 và mô hình vòng cuối. Chiều giảm theo $M$ lặp lại ở cả chín mô hình và lớn hơn nhiều so với ngưỡng đọc ở mục 5.1.3, nên nó đứng được với một hạt giống. Điểm chung với mục 5.2.3 nằm ở cơ chế: trên cả hai nền tảng, huấn luyện lại tầng phân lớp trên dữ liệu có phân phối nhãn cân bằng nâng được độ chính xác của FedAvg.
+
+## 5.4. Chi phí tài nguyên — `[BẢN NHÁP]`
 
 Chi phí truyền thông phụ trội tính theo công thức (4.1) của Chương 4. Chi phí tính toán lấy từ thời gian mỗi bước ghi trong nhật ký của lượt chạy ở Bảng 5.9.
 
-**Bảng 5.10.** Thời gian huấn luyện quy về 1000 vòng truyền thông, lượt chạy một hạt giống ở Bảng 5.9. Cột cuối là tỉ lệ so với FedAvg. `[CẦN ĐIỀN: loại GPU]`.
+**Bảng 5.12.** Thời gian huấn luyện quy về 1000 vòng truyền thông, lượt chạy một hạt giống ở Bảng 5.9. Cột cuối là tỉ lệ so với FedAvg. `[CẦN ĐIỀN: loại GPU]`.
 
 | Thuật toán | Giờ / 1000 vòng | So với FedAvg |
 |---|---|---|
@@ -310,6 +365,8 @@ FedMix tốn gấp khoảng hai lần rưỡi FedAvg, chủ yếu do phải lấ
 |---|---|
 | Bảng 5.2 (cấu hình nền tảng FedBR) | dòng đầu của `results.jsonl` mỗi thuật toán trong `C:\Users\KietVu\Testplace\FedBR\output\cifar10\02_attempt_20260916\`, trường `args` (`holdout_fraction` 0,2; `checkpoint_freq` 250 bước = 5 vòng; `local_steps` 50; `steps` 50000) và `hparams` (`lr` 0,01; `momentum` 0; `weight_decay` 0; `data_augmentation` true; `fedbr_tau1/tau2` 2; `fedbr_mu` 0,5; `fedbr_lambda` 1,0); hạt giống: `Makefile`, biến `SEEDS` |
 | Bảng 5.9, cột "Chạy lại" | `C:\Users\KietVu\Testplace\FedBR\output\cifar10\02_attempt_20260916\summary.csv` (cột `Acc (%)`); đã tái tính khớp từ từng `results.jsonl` (`INDEX` §5.2) |
+| Bảng 5.10 | cùng thư mục, `<thuật toán>/results.jsonl`: độ chính xác mỗi mốc = trung bình `env00_out_acc` … `env09_out_acc`; chỉ số chính = trung bình 5 mốc cao nhất (khớp `summary.csv`), năm mốc cuối = trung bình 5 mốc cuối trong 201 mốc. Hiệu Bảng 1 của [2]: FedBR − FedAvg = 64,65 − 58,99 = 5,66; FedMix − FedAvg = 57,37 − 58,99 = −1,62 |
 | Bảng 5.9, cột "Công bố" | `paper/ref/Guo et al. - 2023 - FedBR….pdf`, Bảng 1, cột CIFAR10 (VGG11) |
-| Bảng 5.10 | cùng `summary.csv`, cột `h/1000rd` |
+| Bảng 5.11, Hình 5.1 | `C:\Users\KietVu\Testplace\FedBR\output\cifar10\02_attempt_20260916\calibrate_head_lda2000\*.json` ($M = 1, 2$) và `…\calibrate_head_lda2000_M3-10\*.json` ($M = 3, 5, 10$), trường `baseline.local` và `rows[].delta.local`; sinh bằng `make calibrate-head OUT=… CALIB_ARGS="--M … --n_per_client 2000 --method lda --eval_envs local"`. Hai kiểm tra bổ sung: `…\calibrate_head\` (200 mẫu/client, CE và LDA, cả global) và `…\calibrate_head_ce_lr01\`. Bảng tổng hợp ở `INDEX` §5.2b. Hình: `figures/hinh5_1.py` |
+| Bảng 5.12 | cùng `summary.csv`, cột `h/1000rd` |
 | Port FedBR lên Flower | kho Flower `runs/paper_{fedavg,fedbr}_rot{,_noaug}_r500/` |
