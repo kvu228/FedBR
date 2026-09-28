@@ -250,3 +250,15 @@ với $L_{\text{FedBR}}$ là (3.19), $t_k = \bar y_k$ (cấu hình soft) hoặc 
 - Chi phí tính toán: thêm một lượt lan truyền ngược bậc hai như FedMix; ước ≈ 11 giờ mỗi 1000 vòng (đo lại bằng `make probe`).
 - Rủi ro đã biết: ở $B = 32$ số hạng (III) lớn gấp 32 lần bản FedMix đã chạy, và nó tuyến tính theo $u_k$ nên không bị chặn dưới. T1 (FedMix bản sửa) cho biết trước điều này có làm mất ổn định không.
 - Không hỗ trợ nhánh Mixture và biến thể Mixup của FedBR.
+
+---
+
+# SỬA — 27/09/2026 · mục 4.3 sau khi hướng A có kết quả
+
+> Chỉ-append (Chương 4 đã có trong Word). Hướng A (FedBR cộng số hạng nhãn và số hạng Taylor của FedMix) đã chạy xong, một hạt giống, và được viết ở **Ch.5 mục 5.5 như một kết quả âm**: số hạng Taylor ở đúng biên độ của (3.15) làm huấn luyện phân kỳ. Câu cuối đoạn "Mọi kết quả FedMix…" ở 4.3 vì vậy không còn đúng. Cụm ở cột *Tìm* đã kiểm là xuất hiện đúng một lần trong thân Word lưu 26/09 10:50.
+>
+> **Hướng A không đưa vào Ch.4.** Khối "THIẾT KẾ HƯỚNG A — chốt 26/09" phía trên dự kiến mục 4.5 cho A; với kết quả âm, A chỉ nằm ở Ch.5 mục 5.5, nơi công thức (5.1) mô tả đủ mục tiêu cục bộ. Ch.4 không phải thêm mục, bảng hay hình.
+
+| # | Mục | Tìm trong Word | Trước | Sau | Lý do |
+|---|---|---|---|---|---|
+| 1 | 4.3, đoạn "Mọi kết quả FedMix trong luận văn…", **vế cuối** | `không được đo trong luận văn` | …nói về FedMix với số hạng Taylor đã bị thu nhỏ ⟨B⟩ lần; biên độ của số hạng Taylor theo đúng (3.15) không được đo trong luận văn. | …nói về FedMix với số hạng Taylor đã bị thu nhỏ ⟨B⟩ lần. Số hạng Taylor ở đúng biên độ của (3.15) chỉ được thử trong một cấu hình khác, ở Chương 5, mục 5.5. | Hướng A đã đo số hạng Taylor ở biên độ công thức; câu cũ thành sai |

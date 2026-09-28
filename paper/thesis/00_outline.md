@@ -35,7 +35,7 @@ Luận văn xây dựng **khung học liên kết chia sẻ mẫu trung bình đ
 
 Kết quả thực nghiệm trên hai nền tảng cho biết cách dùng nào nâng được hiệu suất, dưới dạng lệch phân phối nào, với chi phí bao nhiêu.
 
-**Hướng A (làm nếu còn thời gian).** Đề xuất một cách dùng thứ tư: **FedBR cộng số hạng Taylor**. Giữ hai thành phần của FedBR, giữ nhãn mềm $\bar y_g$, và thêm số hạng tăng cường theo khai triển Taylor bậc nhất vào mục tiêu cục bộ. Đây là phần duy nhất có thể gọi là "phương pháp đề xuất" theo nghĩa hẹp. Luận văn **không phụ thuộc** vào A: nếu A không chạy kịp hoặc cho kết quả âm, luận văn vẫn đứng trên B. Chừng nào A chưa có số liệu, **không chương nào được nhắc tới A** ngoài Ch.6 (hướng phát triển).
+**Hướng A (làm nếu còn thời gian).** Đề xuất một cách dùng thứ tư: **FedBR cộng số hạng Taylor**. Giữ hai thành phần của FedBR, giữ nhãn mềm $\bar y_g$, và thêm số hạng tăng cường theo khai triển Taylor bậc nhất vào mục tiêu cục bộ. Đây là phần duy nhất có thể gọi là "phương pháp đề xuất" theo nghĩa hẹp. Luận văn **không phụ thuộc** vào A: nếu A không chạy kịp hoặc cho kết quả âm, luận văn vẫn đứng trên B. Chừng nào A chưa có số liệu, **không chương nào được nhắc tới A** ngoài Ch.6 (hướng phát triển). **Cập nhật 27/09: A đã chạy, kết quả âm** — số hạng nhãn (II) không tạo khác biệt; số hạng Taylor (III) ở biên độ công thức làm huấn luyện phân kỳ (NaN). Viết ở Ch.5 mục 5.5; không đưa A vào Ch.4.
 
 ### 1.2. Vì sao B khớp đề cương
 
@@ -67,7 +67,7 @@ Chỗ B còn yếu, phải nói thẳng: kết quả đo được có thể là 
   - Flower, lệch nhãn, ba hạt giống: FedMix không cải thiện (cận trên −0,52); mức cải thiện của hiệu chuẩn tầng phân lớp đổi dấu theo ngân sách mẫu ảo; thiên lệch mang tính định hướng.
   - FedBR, lệch nhãn kèm xoay, **một hạt giống** (ngưỡng đọc 3 pp): FedBR hơn FedAvg 6,37 điểm, cùng chiều với bài FedBR; FedMix không phân biệt được với FedAvg; mẫu trung bình ở $M = 10$ không còn đủ thông tin để hiệu chuẩn tầng phân lớp (mục 5.3.3).
 - **C3 — Kiểm chứng lại các kết quả đã công bố**: đo lại FedMix và nhóm hiệu chuẩn trên Flower; tái hiện bảng CIFAR-10 của FedBR; chỉ ra rằng cách tính số hạng Taylor theo lô làm nó nhỏ hơn công thức $B$ lần (Ch.4 mục 4.3). Danh mục kiểm toán mã FedBR nằm ở Phụ lục A. Khớp đóng góp thứ ba đã sửa ở Ch.1, Ch.2 (khối rà soát 26/09).
-- *(C4 — chỉ khi A có số liệu)* Cách dùng kết hợp FedBR và số hạng Taylor.
+- **C4 — Phát hiện âm của hướng A** (27/09, Ch.5 mục 5.5): cộng số hạng nhãn và số hạng Taylor của FedMix vào FedBR không cải thiện FedBR; số hạng Taylor ở đúng biên độ công thức làm huấn luyện phân kỳ, trong khi FedMix phát hành (số hạng thu nhỏ $B$ lần) huấn luyện ổn định. Giả thuyết: (III) tuyến tính theo gradient đầu vào nên không bị chặn dưới, và phép chia thừa $1/B$ giữ FedMix ổn định. **Chưa kiểm chứng**: cần lượt (III)/$B$. Nếu không chạy kiểm chứng, C4 chỉ là một đoạn ở 5.5 và một dòng ở Ch.6, không nêu thành đóng góp riêng ở Ch.1.
 
 **Mọi phát biểu về tính mới phải có hạn định trong câu (IR#3).** Bảng CIFAR-10 của bài FedBR **có** FedMix làm đối chứng (57,37%). Vì vậy cấm viết "chưa ai so FedBR với FedMix". Điều chưa có trong bài FedBR là NaiveMix và việc so các cách dùng như những thành phần của **cùng một khung**.
 
@@ -90,7 +90,7 @@ Kế thừa từ dàn bài cũ (bản gốc ở `archive/…/00_outline.md` §2)
 
 **IR#5 — Khai báo số hạt giống và cách đọc** (sửa 26/09). Mỗi bảng kết quả ghi số hạt giống và phép kiểm định hoặc quy tắc đọc.
 - **Nền tảng Flower: ba hạt giống.** Hiệu theo cặp kèm khoảng tin cậy. Với $n = 3$ và $s \approx 1{,}2$, nửa rộng khoảng tin cậy 95% là **2,98 pp**; hiệu nhỏ hơn mức đó chỉ báo cáo dưới dạng khoảng.
-- **Nền tảng FedBR: một hạt giống (12345) cho mọi thuật toán** (quyết định của học viên 26/09: mỗi lượt FedBR 1000 vòng mất khoảng 7,5 giờ). Không có khoảng tin cậy. Hiệu theo cặp **dưới 3 pp không được diễn giải** thành khác biệt giữa hai phương pháp; từ 3 pp trở lên là quan sát đơn lẻ, đối chiếu chiều với bảng của [2]. Ngưỡng lấy từ chênh lệch giữa lượt chạy lại và bảng công bố (−2,69 đến +2,66, bỏ Moon). Chi tiết ở Ch.5 mục 5.1.3.
+- **Nền tảng FedBR: một hạt giống (12345) cho mọi thuật toán** (quyết định của học viên 26/09: mỗi lượt FedBR 1000 vòng mất khoảng 7,5 giờ). Không có khoảng tin cậy. Hiệu theo cặp **dưới 3 pp không được diễn giải** thành khác biệt giữa hai phương pháp; từ 3 pp trở lên là quan sát đơn lẻ, đối chiếu chiều với bảng của [2]. Ngưỡng lấy từ chênh lệch giữa lượt chạy lại và bảng công bố (−2,69 đến +2,66, bỏ Moon). Chi tiết ở Ch.5 mục 5.3.1.
 
 **IR#6 — Không mô tả sai FedBR, FedMix.**
 - Thành phần 2 của FedBR ghép cặp **theo từng mẫu** trên cùng pseudo-data. Cấm gọi là "căn chỉnh phân phối biên".
@@ -110,9 +110,9 @@ Kế thừa từ dàn bài cũ (bản gốc ở `archive/…/00_outline.md` §2)
 
 **IR#10 — Không viết kết quả chưa chạy.** Mục nào chưa có dữ liệu thì để `[CHỜ SỐ LIỆU: <exp-id>]`. Cấm số minh hoạ, số ước lượng, số "dự kiến".
 
-**IR#11 — FedBR là phương pháp của Guo và cộng sự** (mới, 24/09). Luận văn **cài và đánh giá** FedBR như một cách dùng mẫu trung bình trong khung. Luận văn **không đề xuất** FedBR. Chương 4 trình bày khung và cách các phương pháp được đặt vào khung; mọi mô tả FedBR đi kèm trích dẫn [2].
+**IR#11 — FedBR là phương pháp của Guo và cộng sự** (mới, 24/09). Luận văn **cài và đánh giá** FedBR như một cách dùng mẫu trung bình trong khung. Luận văn **không đề xuất** FedBR. Chương 4 trình bày khung và cách các phương pháp được đặt vào khung; mọi mô tả FedBR đi kèm trích dẫn [3].
 
-**Số trích dẫn theo danh mục Word (kiểm 25/09):** [1] FedMix · [2] FedBR · [3] FedAvg · [4] NIID-Bench · [5] Hsu–Qi–Brown · [8] CCVR · [10] Mixup · [11] VHL · [16] Efron · [17] Ng–Jordan. Các bảng sửa trong md viết trước ngày này còn ghi FedBR là [11]; khi chép vào Word dùng số ở đây.
+**Số trích dẫn theo danh mục Word (kiểm 28/09, sau khi thêm MOON):** [1] Zhao · [2] FedMix · [3] FedBR · [4] FedAvg · [5] NIID-Bench · [6] Hsu–Qi–Brown · [7] FedProx · [8] SCAFFOLD · [9] MOON · [10] CCVR · [11] Mixup · [12] VHL · [13] FedDF · [14] FedNTD · [15] FedGen · [16] FedProto · [17] Efron · [18] Ng–Jordan. Word chèn trích dẫn bằng Zotero; số gõ tay (dán từ md) phải chèn lại bằng Zotero. *(Bản 25/09: [1] FedMix · [2] FedBR · [3] FedAvg … đã lỗi thời.)* Các bảng sửa trong md viết trước ngày này còn ghi FedBR là [11]; khi chép vào Word dùng số ở đây.
 
 **IR#12 — Phép chuẩn hoá số hạng Taylor phải được nêu mỗi lần báo kết quả FedMix** (mới, 24/09). Ghi rõ đó là bản cài đặt gốc (số hạng Taylor nhỏ hơn công thức $B$ lần) hay bản đã sửa. Kết quả FedMix ở mục 5.2 và ở `02_attempt` đều là **bản cài đặt gốc**. `FedBRTaylor` (hướng A) dùng chuẩn hoá đúng theo công thức; khi A có số liệu thì câu *"biên độ của số hạng Taylor theo đúng (3.15) không được đo trong luận văn"* ở Ch.4 mục 4.3 không còn đúng và phải sửa.
 
@@ -152,7 +152,7 @@ Kế thừa từ dàn bài cũ (bản gốc ở `archive/…/00_outline.md` §2)
 |---|---|---|---|
 | ~~M1~~ | ~~Cờ chọn cách chuẩn hoá số hạng Taylor cho FedMix~~ | — | **bỏ**: không sửa FedMix (24/09) |
 | **M2** | Target Makefile `run-naivemix` (`NaiveMix` đã có ở `algorithms.py:809`) | T1 | cao |
-| **M3** | Lớp `FedBRTaylor`: `FedBR.update` cộng số hạng (II) và (III) của FedMix trên pseudo-data có nhãn mềm | T2 (A) | **đã cài** (`b0bb3e2`); đang chạy trên Vast |
+| **M3** | Lớp `FedBRTaylor`: `FedBR.update` cộng số hạng (II) và (III) của FedMix trên pseudo-data có nhãn mềm | T2 (A) | **đã cài** (`b0bb3e2`); **đã chạy** (27/09), kết quả ở `output/cifar10/fedbr_taylor/` |
 | M4 | Sửa lỗi môi trường 0° (`if not angle`), hoặc chấm lại bằng `eval_checkpoint.py` | cột Global | thấp; chỉ số chính không bị ảnh hưởng |
 | M5 | Cờ `--fedmix_M` | quét $M$ | tuỳ chọn |
 
@@ -213,21 +213,21 @@ Các thiết kế của hướng cũ **không mang sang** hướng B: cấu hìn
 
 ### CHƯƠNG 5 — THỰC NGHIỆM · 15–16 trang
 
-- **5.1 Thiết lập** `[ĐÃ VIẾT]`: 5.1.1 hai nền tảng (Bảng 5.1) và cấu hình nền tảng FedBR (Bảng 5.2, từ `args`/`hparams` của `02_attempt`), kèm chỗ thiết lập đi khác khung; 5.1.2 chỉ số và đại lượng ghi nhận; 5.1.3 so sánh theo cặp và số hạt giống (Flower ba, FedBR một với ngưỡng đọc 3 pp); 5.1.4 hai phép so sánh chính S1/S2 (Bảng 5.3) và cách đọc các phép so sánh thăm dò.
+- **5.1 Thiết lập** `[ĐÃ VIẾT]`: 5.1.1 hai nền tảng (Bảng 5.1) và cấu hình nền tảng FedBR (Bảng 5.2, từ `args`/`hparams` của `02_attempt`); cách lấy mẫu trung bình của NaiveMix/FedMix chỉ ghi như một dòng cấu hình, không viết thành "đi khác khung" (học viên, 27/09); 5.1.2 chỉ số, đại lượng ghi nhận, hiệu theo cặp; 5.1.3 hai phép so sánh chính S1/S2 (viết thành câu, không bảng) và cách đọc các phép so sánh thăm dò. Mục "so sánh theo cặp và số hạt giống" bỏ theo học viên (27/09); ngưỡng đọc 3 pp nằm ở 5.3.1.
 - **5.2 Thực nghiệm dưới lệch nhãn trên nền tảng Flower** `[ĐÃ VIẾT]`, 5.2.1–5.2.5 — xem `05_chuong5.md`.
 - **5.3 So sánh các cách dùng mẫu trung bình trên nền tảng FedBR** `[ĐÃ VIẾT, một hạt giống]`:
-  - 5.3.1 tái hiện bảng CIFAR-10 của bài FedBR (`02_attempt`, Bảng 5.9);
-  - 5.3.2 FedBR (S1), FedMix (S2), FedBR + Mixup, FedProx, FedAvg + Mixup (Bảng 5.10); NaiveMix chờ T1 nếu chạy; không có FedMix bản sửa;
-  - 5.3.3 mẫu trung bình còn giữ bao nhiêu thông tin cho tầng phân lớp: phép chẩn đoán, quét $M$ (Bảng 5.11, Hình 5.1). Kiểm toán mã chuyển sang Phụ lục A;
-- **5.4 Chi phí tài nguyên** `[SỬA]`: thời gian mỗi 1000 vòng (Bảng 5.12; cột bộ nhớ trong `summary.csv` chưa dùng được), chi phí truyền thông theo (4.1).
-- *(5.5 — chỉ khi A có số liệu)* FedBR cộng số hạng Taylor `[CHẠY: T2]`.
-- **5.6 Tổng hợp và thảo luận** `[CHẠY]`: trả lời RQ1–RQ4, mỗi câu một đoạn kèm điều kiện hiệu lực; threats to validity.
+  - 5.3.1 tái hiện bảng CIFAR-10 của bài FedBR (`02_attempt`, Bảng 5.8);
+  - 5.3.2 FedBR (S1), FedMix (S2), FedBR + Mixup, FedProx, FedAvg + Mixup (Bảng 5.9); NaiveMix chờ T1 nếu chạy; không có FedMix bản sửa;
+  - 5.3.3 mẫu trung bình còn giữ bao nhiêu thông tin cho tầng phân lớp: phép chẩn đoán, quét $M$ (Bảng 5.10, Hình 5.1). Kiểm toán mã chuyển sang Phụ lục A;
+- **5.4 Chi phí tài nguyên** `[SỬA]`: thời gian mỗi 1000 vòng (Bảng 5.11; cột bộ nhớ trong `summary.csv` chưa dùng được), chi phí truyền thông theo (4.1).
+- **5.5 Cộng số hạng Taylor vào FedBR** `[ĐÃ VIẾT, kết quả âm]`: 5.5.1 thiết kế, công thức (5.1); 5.5.2 kết quả, Bảng 5.12 (101 mốc chung), Hình 5.2 (đường học, NaN ở vòng 396 và 644); 5.5.3 đọc kết quả, giả thuyết về biên độ, giới hạn.
+- **5.6 Tổng hợp và thảo luận** `[ĐÃ VIẾT]`: năm đoạn theo các mục tiêu cụ thể ở Ch.1 (Taylor không nâng hiệu suất; FedBR là cách dùng duy nhất đọc được; mẫu trung bình rẻ nhưng mất thông tin nhanh; thiên lệch định hướng trên Flower; giới hạn). Một câu chờ T1 (NaiveMix).
 
 ### CHƯƠNG 6 — KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN · 4–5 trang
 
 - 6.1 Kết luận; 6.2 Đóng góp; 6.3 Hạn chế; 6.4 Hướng phát triển.
 - Bản nháp mục 6.3–6.4 ở `archive/…/06_chuong6.md` dùng lại được một phần.
-- Hướng phát triển bắt buộc có: hồi quy; mở rộng vùng lân cận song phương; lệch đặc trưng thật (PACS…); phân tích riêng tư hình thức; và A nếu chưa làm.
+- Hướng phát triển bắt buộc có: hồi quy; mở rộng vùng lân cận song phương; lệch đặc trưng thật (PACS…); phân tích riêng tư hình thức; và A nếu chưa làm. Từ kết quả âm của A (27/09): lượt kiểm chứng (III) chia cho $B$; $\lambda$ nhỏ hơn hoặc cắt ngưỡng gradient; ghi giá trị (III) trong nhật ký.
 
 ---
 
@@ -239,7 +239,7 @@ Chi tiết và ngân sách ở `PLAN_huong-B.md`. Tóm tắt:
 |---|---|---|
 | ~~T0~~ | ~~Thêm 2 hạt giống trên nền tảng FedBR~~ | **bỏ** (26/09): FedBR chạy quá lâu; nền tảng FedBR dùng một hạt giống |
 | **T1** | NaiveMix, hạt giống 12345 (FedMix bản sửa bỏ cùng M1) | tuỳ chọn |
-| **T2 (A)** | FedBR cộng số hạng Taylor (M3), hạt giống 12345 | **đang chạy trên Vast** (26/09) |
+| **T2 (A)** | FedBR cộng số hạng Taylor (M3), hạt giống 12345 | **xong** (27/09): kết quả âm, Ch.5 mục 5.5 |
 
 ---
 
@@ -390,4 +390,5 @@ Phép thử cuối, không tự động được: **đọc to ba đoạn liên t
 | 2026-09-26 *(lượt 2)* | **Hướng A: chốt thiết kế và cài M3** (`FedBRTaylor`). Bốn quyết định của học viên: giữ nguyên mục tiêu FedBR và *cộng thêm* $\lambda$(II) + $\lambda(1{-}\lambda)$(III), không co ảnh; hai cấu hình nhãn soft/uniform; đối chứng không-(III) bằng cờ; chỉ chuẩn hoá theo công thức; hạt giống 12345 trước. Thiết kế đầy đủ ở khối 26/09 cuối `04_chuong4.md`; mã và test ở `INDEX` §5.1; kế hoạch chạy ở `PLAN_huong-B.md` §3–§5. Mã chưa commit. Thân Ch.4, Ch.5 **chưa** nhắc A (dàn bài §1.1). Thứ tự chạy T0 → T1 → T2 giữ nguyên |
 | 2026-09-26 *(lượt 3)* | **Thăm dò hiệu chuẩn tầng phân lớp bằng mẫu trung bình, có số liệu.** Script `fedbr/scripts/calibrate_head.py` (`make calibrate-head`) chạy trên `model.pkl` của 9 thuật toán trong `02_attempt`: đóng băng $\phi$, huấn luyện lại $\omega$ trên mẫu trung bình có nhãn mềm, quét $M$. Kết quả (LDA, 2000 mẫu/client, một hạt giống): cải thiện chỉ dương ở $M \le 2$ (FedAvg +5,8 ở $M=1$), âm từ $M=3$, ở $M=10$ mọi mô hình sụt 14–54 điểm; FedBR chỉ +1,3 ở $M=1$, nên khoảng 4,5 trong 9,9 điểm FedBR hơn FedAvg nằm ở tầng phân lớp. Viết thành **Ch.5 mục 5.3.3** (Bảng 5.10, Hình 5.1; bảng chi phí thành Bảng 5.11); số liệu ở `INDEX` §5.2b. Đây là cách dùng thứ tư của mẫu trung bình, sau huấn luyện; Bảng 4.1 chưa có hàng cho nó `[QUYẾT: có đưa vào 4.2 không]`. T2 (hướng A) đang chạy trên Vast, chưa có số liệu. Script, test, hình và các tệp luận văn lượt này chưa commit |
 | 2026-09-26 *(lượt 4)* | **Nền tảng FedBR chỉ dùng một hạt giống (12345); T0 bỏ** (quyết định của học viên: mỗi lượt FedBR 1000 vòng mất khoảng 7,5 giờ). Nền tảng Flower giữ ba hạt giống. Thứ tự chạy thực tế vì vậy đổi so với lượt 2: T0 bỏ, T2 đang chạy trên Vast, T1 (NaiveMix) tuỳ chọn. Ch.5 sửa đè: 5.1.3 thêm **ngưỡng đọc 3 pp** cho nền tảng FedBR (lấy từ chênh lệch lượt chạy lại so với bảng công bố); 5.1.4 bỏ kiểm định t và Holm, H1/H2 thành S1/S2; 5.3.2 viết xong (Bảng 5.10, cả chỉ số chính và năm mốc cuối: FedBR − FedAvg +6,37 / +7,35; FedMix − FedAvg −2,29 / −0,58); 5.3.3 đặt lại thành phép chẩn đoán, không còn gọi là cách dùng thứ tư, nên Ch.4 không phải sửa, thêm chi phí chia sẻ 2000 mẫu/client (khoảng 247 MB) và bỏ hai câu so độ lớn giữa hai nền tảng; đánh lại số: bảng hiệu chuẩn thành 5.11, bảng chi phí thành 5.12. Dàn bài: §1.4, IR#5, IR#12, §3, §4, §5 cập nhật. **Ch.1, Ch.2 trong Word còn câu "ba hạt giống" cho mọi so sánh; học viên chọn chưa rà.** |
+| 2026-09-27 | **Hướng A có kết quả, âm; Ch.5 viết đủ.** Bốn cấu hình FedBRTaylor, hạt giống 12345, 1000 vòng, `output/cifar10/fedbr_taylor/`. Trên 101 mốc chung với `02_attempt`: không (III) 65,63 / 65,05 so với FedBR 65,67 (dưới ngưỡng 3 pp); có (III) dừng quanh 33% rồi loss thành NaN ở vòng 396 (nhãn đều) và 644 (nhãn mềm). Học viên chọn viết theo kết quả âm. Ch.5: viết 5.5 (công thức (5.1), Bảng 5.13, Hình 5.2 `figures/hinh5_2.py`) và 5.6; 5.4 thêm chi phí truyền thông; 5.2.2 trỏ sang 5.5; Hình 5.1 bỏ chữ "local". Ch.4: khối sửa 27/09 cho câu cuối 4.3 (chỉ-append); A không vào Ch.4. Dàn bài: §1.1, C4, M3, §4 Ch.5–Ch.6, §5 cập nhật. |
 | | *(agent tiếp theo cập nhật vào đây)* |

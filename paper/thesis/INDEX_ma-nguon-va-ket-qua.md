@@ -38,7 +38,7 @@
 | Con số | Đang dùng ở | Thực tế |
 |---|---|---|
 | Cận trên 95% một phía **−0,53 pp** (FedMix); kèm +0,17 (C1), +0,38 (C1+C2) | `00_outline.md` IR#2, §3.3 *(đã sửa 24/09)*; Ch.3 mục 3.6 | Không có trong `main.tex` hay bất kỳ tệp nào của `[FL]`. Bài chỉ có khoảng tin cậy hai phía $[-3{,}82;\ +0{,}10]$ trong `response/RESPONSE_TO_REVIEWERS.md:293–299`, và khoảng này **bị cắt khỏi bài** vì giới hạn trang (`response/CHANGELOG_main_tex.md:58`). **Con số cũ không sai, chỉ khác độ làm tròn đầu vào.** Với $t_{0{,}95;2}=2{,}920$, $n=3$: tính từ ba hiệu theo hạt giống thì FedMix **−0,518**, C1 **+0,164**, C1+C2 **+0,385**; tính từ trung bình và độ lệch chuẩn đã làm tròn trong bài (−1,86 ± 0,79; −1,90 ± 1,23; −1,64 ± 1,20) thì ra −0,528, +0,174, +0,383. Luận văn dùng **−0,52 / +0,16 / +0,38**, vì đó là giá trị ai cũng tái lập được từ số theo hạt giống đã in trong bài, và **ghi rõ là phép tính của luận văn** trên số liệu của [TG]. Kết luận không đổi: chỉ FedMix loại trừ được khả năng cải thiện |
-| $s \approx 1{,}2$ pp | `00_outline.md` §5.2; Ch.5 mục 5.1.3 | Không có nguyên văn. Các độ lệch chuẩn mẫu gần 1,2 trong bài: CCVR ±1,19 (Bảng IV), C1 ±1,23 và C1+C2 ±1,20 (Bảng III). Toàn bộ khoảng trong bài: 0,79 (FedMix) đến 1,37 (Newton hội tụ) |
+| $s \approx 1{,}2$ pp | `00_outline.md` IR#5; **không còn dùng trong thân Ch.5** (27/09) | Không có nguyên văn. Các độ lệch chuẩn mẫu gần 1,2 trong bài: CCVR ±1,19 (Bảng IV), C1 ±1,23 và C1+C2 ±1,20 (Bảng III). Toàn bộ khoảng trong bài: 0,79 (FedMix) đến 1,37 (Newton hội tụ) |
 | $n/d \approx 3{,}9$ | Ch.3 mục 3.5.2 | Không có nguyên văn. Đó là $M_c/d = 2000/512 = 3{,}906$; cả hai thành phần có trong bài (`main.tex:297`, `:610`) |
 
 **F3. Mọi dấu ± trong Bài 1 là độ lệch chuẩn mẫu (chia $n-1$) của ba hiệu theo cặp.** Nguồn: `scripts/aggregate_negatives_k2.py` dùng `statistics.stdev`, và các trường `std` trong JSON khớp. **Ngoại lệ:** thanh sai số Hình 1 dùng độ lệch chuẩn tổng thể (`scripts/make_paper_figures.py:111`, `pstdev`), vẽ ±0,42 trong khi chữ ghi ±0,51.
@@ -243,6 +243,19 @@ Hiệu local (điểm phần trăm) so với trước hiệu chuẩn, LDA, 2000 
 | moon | 46,61 | +10,95 | +8,68 | +3,24 | −5,04 | −12,96 |
 
 CE 200 mẫu/client ở $M=1$ (cột đối chiếu): fedavg +4,60 · fedprox +3,19 · groupdro +2,95 · dann +2,19 · fedmix +1,40 · mixup +0,50 · fedbr +0,57 · fedbr-mixup +1,50 · moon +7,45. Tái tính: mỗi `*.json` có `baseline` và `rows[].delta`. Hình: `paper/thesis/figures/hinh5_1.py` đọc thẳng các JSON này.
+
+### 5.2c. `output/cifar10/fedbr_taylor/` — T2, hướng A (chạy trên Vast, 26–27/09)
+
+Cấu hình `02_attempt` (hạt giống 12345, 1000 vòng, VGG11, $B = 32$), thuật toán `FedBRTaylor`, $\lambda = 0{,}1$, chuẩn hoá (III) theo công thức. `summary.csv` cùng thư mục; chỉ số như Bảng 5.8 (local top-5).
+
+| Run | (II) nhãn | (III) | Acc local top-5 | Global | Ghi chú |
+|---|---|---|---|---|---|
+| `fedbr-taylor-soft-noiii` | mềm | không | **66,05** | 41,02 | so FedBR 65,82 / 40,67 cùng hạt giống |
+| `fedbr-taylor-uniform-noiii` | đều | không | **65,50** | 40,99 | |
+| `fedbr-taylor-soft` | mềm | có | 33,07 | 30,74 | học chậm (local 29,8 ở vòng 150 so với FedBR 38,1), **NaN từ vòng 644**; đỉnh 33,2 ở vòng 612. Thiếu tệp `done` dù đủ 1000 vòng |
+| `fedbr-taylor-uniform` | đều | có | 33,16 | 30,20 | **NaN từ vòng 396**; đỉnh 33,4 ở vòng 362 |
+
+Đọc: số hạng (III) ở đúng biên độ của (3.15) làm huấn luyện chậm gấp đôi rồi phân kỳ; số hạng (II) một mình không đổi kết quả của FedBR (±0,5 điểm, trong nhiễu). Chi phí đo được: 9,9–10,0 h/1000 vòng có (III), 8,7–8,8 h không (III); FedBR trên cùng card `[CHƯA ĐO]`.
 
 ### 5.3. `[FL]/src/fedbr_repro/` — bản chép lại `[BR]`, dùng để đối chiếu kiểm toán
 
