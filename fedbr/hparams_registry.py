@@ -96,6 +96,9 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('fedbrt_lambda', 0.1, lambda r: 0.1)      # lam of (3.15); 0 = FedBR
         _hparam('fedbrt_taylor', 1, lambda r: 1)          # 0 = no-Taylor control
         _hparam('fedbrt_label', 'soft', lambda r: 'soft') # 'soft' | 'uniform'
+        # 'formula': term (III) at the magnitude of (3.15); 'released': divided
+        # by the batch size once more, as the released FedMix does (INDEX F1).
+        _hparam('fedbrt_taylor_norm', 'formula', lambda r: 'formula')
 
     if algorithm == "GroupDRO" or algorithm == "FedBR_GroupDRO":
         _hparam('groupdro_eta', 1e-2, lambda r: 10**r.uniform(-3, -1))

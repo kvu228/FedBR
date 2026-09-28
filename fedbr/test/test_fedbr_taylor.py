@@ -177,6 +177,52 @@ class TestTaylorTerm(unittest.TestCase):
         self.assertTrue(any(g.abs().sum() > 0 for g in grads))
 
 
+class TestTaylorNormalisation(unittest.TestCase):
+    """hparam fedbrt_taylor_norm: 'formula' (default) keeps term (III) at the
+    magnitude of (3.15); 'released' divides it by the batch size once more,
+    reproducing the magnitude the released FedMix trains with (INDEX F1).
+    Used as the control run that isolates the magnitude of (III)."""
+
+    def _term(self, norm):
+        algo = build('FedBRTaylor',
+                     make_hparams('FedBRTaylor', fedbrt_lambda=0.1,
+                                  fedbrt_taylor_norm=norm))
+        algo.eval()
+        (x, y), = make_batch(3)
+        u = torch.cat([img for img, _ in make_pseudo(4, True)])
+        return algo.taylor_term(x, y, u, 0.1)
+
+    def test_default_is_formula(self):
+        hp = hparams_registry.default_hparams('FedBRTaylor', 'RotatedCIFAR10')
+        self.assertEqual(hp['fedbrt_taylor_norm'], 'formula')
+
+    def test_released_is_formula_over_batch_size(self):
+        formula = self._term('formula')
+        released = self._term('released')
+        self.assertTrue(torch.allclose(released * BATCH, formula,
+                                       atol=1e-7, rtol=1e-5),
+                        (released.item(), formula.item()))
+
+    def test_released_changes_the_update(self):
+        params = {}
+        for norm in ('formula', 'released'):
+            algo = build('FedBRTaylor',
+                         make_hparams('FedBRTaylor', fedbrt_lambda=0.1,
+                                      fedbrt_taylor_norm=norm))
+            algo.train()
+            algo.update(make_batch(1), make_pseudo(2, True))
+            params[norm] = params_of(algo)
+        diff = max((params['formula'][k] - params['released'][k]).abs().max().item()
+                   for k in params['formula'])
+        self.assertGreater(diff, 1e-7)
+
+    def test_unknown_norm_is_rejected(self):
+        algo = build('FedBRTaylor',
+                     make_hparams('FedBRTaylor', fedbrt_taylor_norm='bogus'))
+        with self.assertRaises(ValueError):
+            algo.update(make_batch(1), make_pseudo(2, True))
+
+
 class TestLabelChoice(unittest.TestCase):
 
     def _step_with_labels(self, label_mode, label_seed):

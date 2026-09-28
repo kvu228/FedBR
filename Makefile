@@ -139,7 +139,7 @@ help:
 	@echo "Single runs   run-local run-fedavg run-fedprox run-moon run-dann"
 	@echo "              run-groupdro run-fedbr run-mixup run-fedmix"
 	@echo "              run-fedbr-mixup run-fedntd run-feddecorr run-fedcm"
-	@echo "              run-fedbr-taylor [LABEL=soft|uniform] [TAYLOR=1|0]"
+	@echo "              run-fedbr-taylor [LABEL=soft|uniform] [TAYLOR=1|0] [NORM=formula|released]"
 	@echo "  t2                 the four FedBR+Taylor configurations (thesis)"
 	@echo ""
 	@echo "Reporting"
@@ -255,11 +255,16 @@ run-fedbr-mixup:
 # term and the first-order Taylor term of FedMix, on FedBR's fixed pseudo-data.
 #   LABEL=soft|uniform   label of the pseudo-data in the soft-label term
 #   TAYLOR=1|0           1 includes term (III); 0 is the no-Taylor control
-# Output name: fedbr-taylor-<LABEL>[-noiii]. `make t2` runs all four.
+#   NORM=formula|released  formula: (III) at the magnitude of (3.15);
+#                        released: divided by B once more, as the released
+#                        FedMix does -- the control that isolates the magnitude
+# Output name: fedbr-taylor-<LABEL>[-noiii][-normB]. `make t2` runs the four
+# formula configurations; add the control with NORM=released.
 LABEL  ?= soft
 TAYLOR ?= 1
-FEDBRT_NAME := fedbr-taylor-$(LABEL)$(if $(filter 0,$(TAYLOR)),-noiii,)
-run-fedbr-taylor: HP = , "fedbrt_lambda": 0.1, "fedbrt_taylor": $(TAYLOR), "fedbrt_label": "$(LABEL)"
+NORM   ?= formula
+FEDBRT_NAME := fedbr-taylor-$(LABEL)$(if $(filter 0,$(TAYLOR)),-noiii,)$(if $(filter released,$(NORM)),-normB,)
+run-fedbr-taylor: HP = , "fedbrt_lambda": 0.1, "fedbrt_taylor": $(TAYLOR), "fedbrt_label": "$(LABEL)", "fedbrt_taylor_norm": "$(NORM)"
 run-fedbr-taylor:
 	$(call run_fed,$(FEDBRT_NAME),FedBRTaylor)
 

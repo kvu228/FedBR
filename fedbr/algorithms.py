@@ -1201,19 +1201,28 @@ class FedBRTaylor(FedBR):
     """
 
     @staticmethod
-    def _taylor_from_loss(ce_mean, x, u, lam):
+    def _taylor_from_loss(ce_mean, x, u, lam, norm='formula'):
         # d(mean_k CE_k)/dx has rows (1/B) grad CE_k, so the plain sum over
         # the batch is already the batch mean of <grad CE_k, u_k>.
         grad = autograd.grad(ce_mean, x, create_graph=True)[0]
-        return lam * (1 - lam) * torch.sum(grad * u)
+        term = lam * (1 - lam) * torch.sum(grad * u)
+        if norm == 'released':
+            # the released FedMix divides by the batch size once more
+            term = term / len(x)
+        elif norm != 'formula':
+            raise ValueError("fedbrt_taylor_norm must be 'formula' or 'released', got %r"
+                             % (norm,))
+        return term
 
     def taylor_term(self, x, y, u, lam):
-        """Term (III) for a batch: lam (1-lam) mean_k <grad_x CE(f(x_k), y_k), u_k>.
-        `y` holds class indices. Runs its own forward pass; `update` shares
-        the forward pass instead."""
+        """Term (III) for a batch: lam (1-lam) mean_k <grad_x CE(f(x_k), y_k), u_k>,
+        divided by B once more under fedbrt_taylor_norm='released'. `y` holds
+        class indices. Runs its own forward pass; `update` shares the forward
+        pass instead."""
         x = x.clone().requires_grad_()
         ce = F.cross_entropy(self.predict(x), y)
-        return self._taylor_from_loss(ce, x, u, lam)
+        return self._taylor_from_loss(ce, x, u, lam,
+                                      self.hparams.get('fedbrt_taylor_norm', 'formula'))
 
     def update(self, minibatches, unlabeled=None):
         if self.hparams.get('use_Mixup'):
@@ -1224,6 +1233,10 @@ class FedBRTaylor(FedBR):
         if label_mode not in ('soft', 'uniform'):
             raise ValueError("fedbrt_label must be 'soft' or 'uniform', got %r"
                              % (label_mode,))
+        taylor_norm = self.hparams.get('fedbrt_taylor_norm', 'formula')
+        if taylor_norm not in ('formula', 'released'):
+            raise ValueError("fedbrt_taylor_norm must be 'formula' or 'released', got %r"
+                             % (taylor_norm,))
 
         device = minibatches[0][0].device
         mu = self.hparams.get('fedbr_mu', 0.5)
@@ -1279,7 +1292,7 @@ class FedBRTaylor(FedBR):
         # Added terms (II) and (III), on the same forward pass.
         soft_label_loss = - torch.mean(torch.sum(log_p * soft_y, 1))
         if use_taylor:
-            taylor_loss = self._taylor_from_loss(classifier_loss, all_x, all_unlabeled, lam)
+            taylor_loss = self._taylor_from_loss(classifier_loss, all_x, all_unlabeled, lam, taylor_norm)
         else:
             taylor_loss = torch.zeros((), device=all_x.device)
 
