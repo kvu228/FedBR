@@ -101,7 +101,7 @@ Tôi xin cam đoan luận văn này là công trình nghiên cứu của bản t
 
 Học liên kết cho phép nhiều thiết bị cùng huấn luyện một mô hình mà không gửi dữ liệu đi, nhưng hiệu suất giảm rõ khi dữ liệu giữa các thiết bị không đồng nhất. Chia sẻ thêm mẫu trung bình, tức ảnh trung bình của một nhóm ảnh kèm nhãn mềm, là một cách khắc phục tốn rất ít truyền thông. FedMix dùng loại mẫu này qua khai triển Taylor bậc nhất của hàm mất mát, nhưng chưa rõ cách dùng đó có thực sự nâng được hiệu suất hay không. Đó là lý do chọn đề tài.
 
-Luận văn nhằm trả lời câu hỏi trên trong một khung có kiểm soát: dựng một khung học liên kết chia sẻ mẫu trung bình, trong đó cách dùng mẫu trung bình thay được, rồi so sánh ba cách dùng NaiveMix, FedMix và FedBR về độ chính xác và chi phí. Phạm vi là phân loại ảnh CIFAR-10 dưới lệch phân phối nhãn, có hoặc không kèm lệch đặc trưng mô phỏng bằng phép xoay, trên hai nền tảng thực nghiệm.
+Luận văn nhằm trả lời câu hỏi trên trong một khung có kiểm soát: dựng một khung học liên kết chia sẻ mẫu trung bình, trong đó cách dùng mẫu trung bình thay được, đặt ba cách dùng NaiveMix, FedMix và FedBR vào cùng khung, rồi so sánh FedMix và FedBR về độ chính xác và chi phí. Phạm vi là phân loại ảnh CIFAR-10 dưới lệch phân phối nhãn, có hoặc không kèm lệch đặc trưng mô phỏng bằng phép xoay, trên hai nền tảng thực nghiệm.
 
 Về khoa học, luận văn cho thấy trong các cấu hình đã đo, cách dùng dựa trên khai triển Taylor không nâng được hiệu suất, còn cách dùng mẫu trung bình làm điểm tựa như FedBR thì có; đồng thời chỉ ra rằng cách tính số hạng Taylor theo lô thường gặp làm số hạng này nhỏ hơn công thức một thừa số bằng kích thước lô. Về thực tiễn, kết quả giúp chọn cách dùng mẫu trung bình và cho biết chi phí cùng lượng thông tin mà kênh này còn giữ.
 

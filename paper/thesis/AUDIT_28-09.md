@@ -361,3 +361,29 @@ Danh mục trong Word (28/09) đã đánh lại sau khi thêm MOON: **[1] Zhao �
 | E6 | Ch.5 | `bài báo FedMix [1]: ở bảng` | [1] | [2] (đoạn này bị xoá theo quyết định bỏ NaiveMix, xem phần A của Ch.5) |
 
 Các số gõ tay sai ở Ch.3 và Ch.4 nằm trong phần A của từng chương (Ch.3: "FedMix [1]" hai chỗ, "FedMix [3]" ở 3.4.1; Ch.4: "của [11]" ở 4.4). Bản md `05_chuong5.md` đã đổi theo danh mục mới.
+
+---
+
+# LƯỢT 2 · rà lại bản Word lưu 28/09 12:05
+
+> **Kết quả chung.** Gần như toàn bộ các hàng ở phần A (Ch.1–5) và các mục B, D, E đã được áp. Chú thích bảng, hình giờ liên tục (Bảng 2.1–5.12, Hình 4.1–5.2), không trùng số, mọi chỗ nhắc "Bảng/Hình x.y" trong thân bài đều trỏ tới chú thích có thật. Trích dẫn khớp danh mục hiện tại (danh mục đã đổi thứ tự: [7] SCAFFOLD, [8] FedProx; Zotero tự cập nhật). Ký hiệu $\theta^*$, $\mathbb{R}^C$, $\phi_i$ đã sửa. Mỗi chương còn 0–2 khuôn tương phản, không cụm sáo, một dấu gạch ngang chêm ở Ch.2. Lời cam đoan, Mở đầu, Danh mục công bố đã có.
+>
+> Các chỗ dưới đây là phần còn lại. Cụm ở cột *Tìm* đã kiểm có trong Word.
+
+| # | Vị trí | Tìm trong Word | Hiện | Sửa |
+|---|---|---|---|---|
+| L1 | Mở đầu, đoạn 2 | `rồi so sánh ba cách dùng NaiveMix, FedMix và FedBR` | …dựng một khung…, rồi so sánh ba cách dùng NaiveMix, FedMix và FedBR về độ chính xác và chi phí. | …dựng một khung…, đặt ba cách dùng NaiveMix, FedMix và FedBR vào cùng khung, rồi so sánh FedMix và FedBR về độ chính xác và chi phí. *(NaiveMix không chạy; lỗi của bản md, đã sửa trong md)* |
+| L2 | Danh mục ký hiệu và chữ viết tắt | tiêu đề "DANH MỤC CÁC KÝ HIỆU VÀ CHỮ VIẾT TẮT" | chỉ có bảng chữ viết tắt (13 dòng) | chèn bảng **Ký hiệu** ở mục 2 của `00_mo-dau-va-danh-muc.md` phía trên bảng chữ viết tắt; nếu không dùng bảng ký hiệu thì đổi tiêu đề thành "DANH MỤC CÁC CHỮ VIẾT TẮT" |
+| L3 | Ch.4, 4.3, ý "Phép co" | `ảnh hưởng của phép co..` | "…của phép co.." | một dấu chấm |
+| L4 | Ch.5, 5.1, đoạn mở | `gọi tắt là nền tảng FedBR..` | "…nền tảng FedBR.." | một dấu chấm |
+| L5 | Ch.5, 5.3.2, đoạn giải thích Bảng 5.9 | `FedMix và NaiveMix dùng` | "FedMix và NaiveMix dùng ⟨λ = 0.1⟩; FedMix dùng cách chuẩn hoá ở Chương 4, mục 4.3…" | "FedMix dùng ⟨λ = 0.1⟩ và cách chuẩn hoá ở Chương 4, mục 4.3…" (bảng không còn hàng NaiveMix) |
+| L6 | Ch.5, 5.3.3, đoạn giải thích Hình 5.1 | `vẽ số liệu của Bảng 5.10 vẽ theo` | "Hình 5.1 vẽ số liệu của Bảng 5.10 vẽ theo ⟨M⟩." | "Hình 5.1 vẽ số liệu của Bảng 5.10 theo ⟨M⟩." |
+| L7 | Ch.4, Thuật toán 4.1, phần Đầu vào/Đầu ra | `số vòng truyền thông ;số bước cục bộ` | dấu chấm phẩy dính chữ sau, có cách trước: " ;số bước", " ;số ảnh", " ;cách dùng", "Đầu ra:tham số" | "…; số bước…", "…; số ảnh…", "…; cách dùng…", "Đầu ra: tham số…" |
+| L8 | Ch.4, Thuật toán 4.1 | ký hiệu $w_0$, $w_T$, $w$, $\nabla_w$ | tham số viết $w$ | $\theta_0$, $\theta_T$, $\theta$, $\nabla_\theta$ (mục D3; Hình 4.1 đã dùng $\theta$) |
+| L9 | Ch.5, Bảng 5.7, hàng "Bậc nhất tốt nhất" | `tốc độ học 0,1, 2000 bước` | "0,1" | "0.1" |
+| L10 | Ch.5, 5.3.3, đoạn thủ tục | `với hệ số 0,01` | "0,01" | "0.01" |
+| L11 | Số có 4 chữ số | `VHL cần khoảng 2,000 mẫu ảo`; Bảng 2.2 `(~2,000 mẫu cho`; Bảng 5.2 `1,000 vòng`; công thức "M_c = 2,000" ở đoạn giải thích Bảng 5.6 và đoạn trước Bảng 5.7 | có dấu phẩy ở 5 chỗ, trong khi 23 chỗ khác viết liền (1000 vòng, 2000 mẫu, 2000 bước, n_V = 2000) | viết liền cả 5 chỗ: 2000, 1000; giữ dấu phẩy cho số từ 5 chữ số (20,000). Seed 12345 là mã, không tách |
+| L12 | Ch.5, Bảng 5.3 (thiết lập Flower), công thức | "β ∈ {0.05; 0.1; 0.3}", "M_c ∈ {100; 2000}" | dấu chấm phẩy | "{0.05, 0.1, 0.3}", "{100, 2000}" (mục C7, chưa áp) |
+| L13 | Ch.5, 5.2.2, công thức | "t_{0.95; 2}" | dấu chấm phẩy | "t_{0.95, 2}" (mục C8, chưa áp) |
+| L14 | Ch.5, 5.5.1, công thức sau (5.1) | "δ ∈ {0;1}" | dấu chấm phẩy | "δ ∈ {0, 1}" |
+| L15 | Ch.4, 4.4 (tuỳ chọn) | `tới từng client, tốn` | "…tốn ⟨N⟩ lần chiều lên." | "…tốn gấp ⟨N⟩ lần chiều lên." |
